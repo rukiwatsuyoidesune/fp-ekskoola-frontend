@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, BookOpen, Plus, Trash2, Lightbulb } from "lucide-react"
+import { ArrowLeft, BookOpen, Trash2, Lightbulb, Save } from "lucide-react"
 import Link from "next/link"
 
 interface Schedule {
@@ -20,29 +21,130 @@ interface Schedule {
   endTime: string
 }
 
-export default function CreateExtracurricularPage() {
-  const [formData, setFormData] = useState({
+interface ExtracurricularData {
+  id: string
+  name: string
+  description: string
+  maxMembers: string
+  registrationStart: string
+  registrationEnd: string
+  registrationActive: boolean
+  schedules: Schedule[]
+}
+
+export default function EditExtracurricularPage() {
+  const params = useParams()
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [formData, setFormData] = useState<ExtracurricularData>({
+    id: "",
     name: "",
     description: "",
     maxMembers: "",
     registrationStart: "",
     registrationEnd: "",
     registrationActive: true,
+    schedules: [{ id: "1", day: "", startTime: "", endTime: "" }],
   })
 
   const [schedules, setSchedules] = useState<Schedule[]>([{ id: "1", day: "", startTime: "", endTime: "" }])
 
   const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 
+  // Mock data ekstrakurikuler
+  const mockExtracurriculars: Record<string, ExtracurricularData> = {
+    "1": {
+      id: "1",
+      name: "Basket",
+      description: "Olahraga basket untuk meningkatkan kebugaran dan kerjasama tim",
+      maxMembers: "20",
+      registrationStart: "2024-01-01",
+      registrationEnd: "2024-01-31",
+      registrationActive: true,
+      schedules: [
+        { id: "1", day: "Senin", startTime: "15:30", endTime: "17:00" },],
+    },
+    "2": {
+      id: "2",
+      name: "Robotika",
+      description: "Belajar pemrograman dan robotika untuk kompetisi",
+      maxMembers: "20",
+      registrationStart: "2024-01-01",
+      registrationEnd: "2024-01-31",
+      registrationActive: true,
+      schedules: [{ id: "1", day: "Jumat", startTime: "15:30", endTime: "17:30" }],
+    },
+  }
+
+  useEffect(() => {
+    // Simulasi loading data
+    const loadData = async () => {
+      setIsLoading(true)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      const ekstrakurikulerId = params.id as string
+      const data = mockExtracurriculars[ekstrakurikulerId]
+
+      if (data) {
+        setFormData(data)
+        setSchedules(data.schedules)
+      }
+
+      setIsLoading(false)
+    }
+
+    loadData()
+  }, [params.id])
+
   const updateSchedule = (id: string, field: keyof Schedule, value: string) => {
     setSchedules(schedules.map((schedule) => (schedule.id === id ? { ...schedule, [field]: value } : schedule)))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log("Form data:", formData)
-    console.log("Schedules:", schedules)
+    setIsSaving(true)
+
+    try {
+      // Simulasi API call untuk update
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      console.log("Updated data:", { ...formData, schedules })
+      alert("Ekstrakurikuler berhasil diperbarui!")
+      router.push("/dashboard/pembina")
+    } catch (error) {
+      alert("Gagal memperbarui ekstrakurikuler. Silakan coba lagi.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <Card className="w-full max-w-md border-0 shadow-lg">
+          <CardContent className="p-8 text-center">
+            <div className="w-8 h-8 border-4 border-blue-700 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Memuat data ekstrakurikuler...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!formData.id) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <Card className="w-full max-w-md border-0 shadow-lg">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-4">Ekstrakurikuler Tidak Ditemukan</h2>
+            <Link href="/dashboard/pembina">
+              <Button className="bg-blue-700 hover:bg-blue-800">Kembali ke Dashboard</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -61,13 +163,27 @@ export default function CreateExtracurricularPage() {
               <BookOpen className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">Buat Ekstrakurikuler</h1>
-              <p className="text-sm text-gray-600">Dashboard Pembina / Buat Ekstrakurikuler</p>
+              <h1 className="text-xl font-bold">Edit Ekstrakurikuler</h1>
+              <p className="text-sm text-gray-600">Dashboard Pembina / Edit Ekstrakurikuler / {formData.name}</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <Button className="bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900">
-              Simpan Ekstrakurikuler
+            <Button
+              onClick={handleSubmit}
+              disabled={isSaving}
+              className="bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900"
+            >
+              {isSaving ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Menyimpan...</span>
+                </div>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Simpan Perubahan
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -82,7 +198,7 @@ export default function CreateExtracurricularPage() {
               <Card className="border-0 shadow-lg">
                 <CardHeader>
                   <CardTitle>Informasi Dasar</CardTitle>
-                  <CardDescription>Masukkan informasi dasar ekstrakurikuler</CardDescription>
+                  <CardDescription>Edit informasi dasar ekstrakurikuler</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -128,7 +244,7 @@ export default function CreateExtracurricularPage() {
                   <CardDescription>Atur jadwal kegiatan ekstrakurikuler</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {schedules.map((schedule, index) => (
+                  {schedules.map((schedule) => (
                     <div key={schedule.id} className="p-4 border rounded-lg bg-gray-50">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-medium">Jadwal</h4>
@@ -223,21 +339,46 @@ export default function CreateExtracurricularPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Lightbulb className="w-5 h-5 text-yellow-600" />
-                  <span>Tips</span>
+                  <span>Tips Edit</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="font-medium text-blue-800">Nama yang Menarik</p>
-                  <p className="text-blue-600">Gunakan nama yang mudah diingat dan mencerminkan kegiatan</p>
+                  <p className="font-medium text-blue-800">Perhatikan Anggota Aktif</p>
+                  <p className="text-blue-600">Pastikan perubahan tidak mengganggu anggota yang sudah terdaftar</p>
                 </div>
                 <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="font-medium text-green-800">Deskripsi Jelas</p>
-                  <p className="text-green-600">Jelaskan manfaat dan kegiatan yang akan dilakukan</p>
+                  <p className="font-medium text-green-800">Jadwal Bentrok</p>
+                  <p className="text-green-600">Cek kembali jadwal untuk menghindari bentrok dengan kegiatan lain</p>
                 </div>
                 <div className="p-3 bg-purple-50 rounded-lg">
-                  <p className="font-medium text-purple-800">Jadwal Realistis</p>
-                  <p className="text-purple-600">Pastikan jadwal tidak bentrok dengan kegiatan lain</p>
+                  <p className="font-medium text-purple-800">Notifikasi Otomatis</p>
+                  <p className="text-purple-600">Anggota akan mendapat notifikasi jika ada perubahan penting</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Info Ekstrakurikuler */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle>Info Ekstrakurikuler</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">ID Ekstrakurikuler</span>
+                  <span className="font-medium">{formData.id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Anggota Saat Ini</span>
+                  <span className="font-medium">18 orang</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status</span>
+                  <span className="font-medium text-green-600">Aktif</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Dibuat</span>
+                  <span className="font-medium">1 Jan 2024</span>
                 </div>
               </CardContent>
             </Card>

@@ -1,7 +1,5 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
-
 import { useState } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
@@ -32,7 +30,6 @@ function StudentDashboardContent() {
   const studentData = {
     name: "Ahmad Rizki",
     nis: "2024001",
-    class: "XI IPA IPA 2",
     avatar: "/placeholder.svg?height=40&width=40",
   }
 
@@ -57,7 +54,6 @@ function StudentDashboardContent() {
       maxMembers: 25,
       currentMembers: 18,
       registrationOpen: true,
-      category: "Bahasa",
       supervisor: "Mrs. Sarah Johnson",
       location: "Ruang Bahasa",
     },
@@ -69,7 +65,6 @@ function StudentDashboardContent() {
       maxMembers: 20,
       currentMembers: 15,
       registrationOpen: true,
-      category: "Teknologi",
       supervisor: "Pak Budi Santoso",
       location: "Lab Komputer",
     },
@@ -81,7 +76,6 @@ function StudentDashboardContent() {
       maxMembers: 25,
       currentMembers: 22,
       registrationOpen: true,
-      category: "Seni",
       supervisor: "Bu Sari Dewi",
       location: "Aula Sekolah",
     },
@@ -93,7 +87,6 @@ function StudentDashboardContent() {
       maxMembers: 16,
       currentMembers: 16,
       registrationOpen: false,
-      category: "Olahraga",
       supervisor: "Pak Ahmad Fauzi",
       location: "Lapangan Futsal",
     },
@@ -105,7 +98,6 @@ function StudentDashboardContent() {
       maxMembers: 30,
       currentMembers: 25,
       registrationOpen: true,
-      category: "Karakter",
       supervisor: "Pak Dedi Kurniawan",
       location: "Lapangan Upacara",
     },
@@ -117,7 +109,6 @@ function StudentDashboardContent() {
       maxMembers: 15,
       currentMembers: 12,
       registrationOpen: true,
-      category: "Seni",
       supervisor: "Bu Rina Melati",
       location: "Studio Musik",
     },
@@ -129,7 +120,6 @@ function StudentDashboardContent() {
       maxMembers: 20,
       currentMembers: 14,
       registrationOpen: true,
-      category: "Media",
       supervisor: "Pak Eko Prasetyo",
       location: "Ruang Redaksi",
     },
@@ -162,9 +152,11 @@ function StudentDashboardContent() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm">
-              <LogOut className="h-5 w-5" />
-            </Button>
+            <Link href="/login">
+              <Button variant="ghost" size="sm">
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -186,9 +178,7 @@ function StudentDashboardContent() {
               </Avatar>
               <div>
                 <h2 className="text-2xl font-bold">{studentData.name}</h2>
-                <p className="opacity-90">
-                  NIS: {studentData.nis} • Kelas: {studentData.class}
-                </p>
+                <p className="opacity-90">NIS: {studentData.nis}</p>
                 <p className="opacity-90">Ekstrakurikuler: {myExtracurriculars.length}/2</p>
               </div>
             </div>
@@ -291,9 +281,6 @@ function StudentDashboardContent() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <h3 className="text-lg font-semibold">{ekskul.name}</h3>
-                            <Badge variant="outline" className="text-xs">
-                              {ekskul.category}
-                            </Badge>
                           </div>
                           <p className="text-sm text-gray-600 mb-2">{ekskul.description}</p>
                         </div>

@@ -13,14 +13,10 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   BookOpen,
   ArrowLeft,
-  Search,
-  Filter,
-  UserCheck,
   Clock,
   Calendar,
   Users,
   Save,
-  Download,
   CheckCircle,
   XCircle,
   AlertCircle,
@@ -30,7 +26,6 @@ interface Member {
   id: number
   name: string
   nis: string
-  class: string
   avatar?: string
   attendance: "hadir" | "tidak_hadir" | "izin" | "sakit" | null
   note?: string
@@ -42,8 +37,6 @@ export default function PresensiPage() {
   const [filterStatus, setFilterStatus] = useState("all")
   const [sessionDate, setSessionDate] = useState(new Date().toISOString().split("T")[0])
   const [sessionTime, setSessionTime] = useState("15:30")
-  const [sessionTopic, setSessionTopic] = useState("")
-  const [sessionNotes, setSessionNotes] = useState("")
   const [isSaving, setIsSaving] = useState(false)
 
   const extracurriculars = [
@@ -56,7 +49,6 @@ export default function PresensiPage() {
       id: 1,
       name: "Ahmad Rizki Pratama",
       nis: "2024001",
-      class: "XI IPA 2",
       avatar: "/placeholder.svg?height=40&width=40",
       attendance: null,
     },
@@ -64,7 +56,6 @@ export default function PresensiPage() {
       id: 2,
       name: "Siti Nurhaliza",
       nis: "2024002",
-      class: "XI IPA 1",
       avatar: "/placeholder.svg?height=40&width=40",
       attendance: null,
     },
@@ -72,7 +63,6 @@ export default function PresensiPage() {
       id: 3,
       name: "Budi Santoso",
       nis: "2024003",
-      class: "XI IPA 2",
       avatar: "/placeholder.svg?height=40&width=40",
       attendance: null,
     },
@@ -80,7 +70,6 @@ export default function PresensiPage() {
       id: 4,
       name: "Dewi Sartika",
       nis: "2024004",
-      class: "XI IPA 3",
       avatar: "/placeholder.svg?height=40&width=40",
       attendance: null,
     },
@@ -88,7 +77,6 @@ export default function PresensiPage() {
       id: 5,
       name: "Andi Wijaya",
       nis: "2024005",
-      class: "XI IPA 1",
       avatar: "/placeholder.svg?height=40&width=40",
       attendance: null,
     },
@@ -96,7 +84,6 @@ export default function PresensiPage() {
       id: 6,
       name: "Maya Putri",
       nis: "2024006",
-      class: "XI IPA 3",
       avatar: "/placeholder.svg?height=40&width=40",
       attendance: null,
     },
@@ -113,22 +100,12 @@ export default function PresensiPage() {
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.nis.includes(searchTerm) ||
-      member.class.toLowerCase().includes(searchTerm.toLowerCase())
+      member.nis.includes(searchTerm)
 
     const matchesFilter = filterStatus === "all" || member.attendance === filterStatus
 
     return matchesSearch && matchesFilter
   })
-
-  const attendanceStats = {
-    total: members.length,
-    hadir: members.filter((m) => m.attendance === "hadir").length,
-    tidak_hadir: members.filter((m) => m.attendance === "tidak_hadir").length,
-    izin: members.filter((m) => m.attendance === "izin").length,
-    sakit: members.filter((m) => m.attendance === "sakit").length,
-    belum_diisi: members.filter((m) => m.attendance === null).length,
-  }
 
   const handleSaveAttendance = async () => {
     setIsSaving(true)
@@ -235,108 +212,6 @@ export default function PresensiPage() {
                 <Label htmlFor="time">Waktu</Label>
                 <Input id="time" type="time" value={sessionTime} onChange={(e) => setSessionTime(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="topic">Topik Kegiatan</Label>
-                <Input
-                  id="topic"
-                  placeholder="Masukkan topik kegiatan"
-                  value={sessionTopic}
-                  onChange={(e) => setSessionTopic(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">Catatan Sesi</Label>
-              <Textarea
-                id="notes"
-                placeholder="Tambahkan catatan untuk sesi ini..."
-                value={sessionNotes}
-                onChange={(e) => setSessionNotes(e.target.value)}
-                rows={3}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
-          <Card className="border-0 shadow-lg">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-700">{attendanceStats.total}</div>
-              <div className="text-sm text-gray-600">Total</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-lg">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{attendanceStats.hadir}</div>
-              <div className="text-sm text-gray-600">Hadir</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-lg">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-red-600">{attendanceStats.tidak_hadir}</div>
-              <div className="text-sm text-gray-600">Tidak Hadir</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-lg">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-600">{attendanceStats.izin}</div>
-              <div className="text-sm text-gray-600">Izin</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-lg">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">{attendanceStats.sakit}</div>
-              <div className="text-sm text-gray-600">Sakit</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-lg">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-600">{attendanceStats.belum_diisi}</div>
-              <div className="text-sm text-gray-600">Belum Diisi</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Controls */}
-        <Card className="mb-8 border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Cari nama, NIS, atau kelas..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-full sm:w-48">
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Filter status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Status</SelectItem>
-                    <SelectItem value="hadir">Hadir</SelectItem>
-                    <SelectItem value="tidak_hadir">Tidak Hadir</SelectItem>
-                    <SelectItem value="izin">Izin</SelectItem>
-                    <SelectItem value="sakit">Sakit</SelectItem>
-                    <SelectItem value={null as any}>Belum Diisi</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleMarkAllPresent}>
-                  <UserCheck className="w-4 h-4 mr-2" />
-                  Tandai Semua Hadir
-                </Button>
-                <Button variant="outline">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -358,7 +233,6 @@ export default function PresensiPage() {
                   <tr>
                     <th className="text-left p-4 font-medium text-gray-700">Anggota</th>
                     <th className="text-left p-4 font-medium text-gray-700">NIS</th>
-                    <th className="text-left p-4 font-medium text-gray-700">Kelas</th>
                     <th className="text-center p-4 font-medium text-gray-700">Status Kehadiran</th>
                     <th className="text-left p-4 font-medium text-gray-700">Catatan</th>
                   </tr>
@@ -387,9 +261,6 @@ export default function PresensiPage() {
                       </td>
                       <td className="p-4">
                         <span className="text-gray-600">{member.nis}</span>
-                      </td>
-                      <td className="p-4">
-                        <Badge variant="outline">{member.class}</Badge>
                       </td>
                       <td className="p-4">
                         <div className="flex justify-center space-x-2">

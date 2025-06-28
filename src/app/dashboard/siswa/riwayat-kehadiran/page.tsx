@@ -26,7 +26,6 @@ interface AttendanceRecord {
   extracurricular: string
   date: string
   time: string
-  topic: string
   status: "hadir" | "tidak_hadir" | "izin" | "sakit"
   note?: string
 }
@@ -43,7 +42,6 @@ export default function RiwayatKehadiranPage() {
       extracurricular: "Basket",
       date: "2024-01-15",
       time: "15:30-17:00",
-      topic: "Latihan Shooting",
       status: "hadir",
     },
     {
@@ -51,7 +49,6 @@ export default function RiwayatKehadiranPage() {
       extracurricular: "English Club",
       date: "2024-01-14",
       time: "14:00-15:30",
-      topic: "Speaking Practice",
       status: "hadir",
     },
     {
@@ -59,7 +56,6 @@ export default function RiwayatKehadiranPage() {
       extracurricular: "Basket",
       date: "2024-01-13",
       time: "15:30-17:00",
-      topic: "Latihan Dribbling",
       status: "tidak_hadir",
       note: "Sakit demam",
     },
@@ -68,7 +64,6 @@ export default function RiwayatKehadiranPage() {
       extracurricular: "English Club",
       date: "2024-01-12",
       time: "14:00-15:30",
-      topic: "Grammar Review",
       status: "hadir",
     },
     {
@@ -76,7 +71,6 @@ export default function RiwayatKehadiranPage() {
       extracurricular: "Basket",
       date: "2024-01-10",
       time: "15:30-17:00",
-      topic: "Scrimmage Game",
       status: "izin",
       note: "Ada acara keluarga",
     },
@@ -85,7 +79,6 @@ export default function RiwayatKehadiranPage() {
       extracurricular: "English Club",
       date: "2024-01-09",
       time: "14:00-15:30",
-      topic: "Vocabulary Building",
       status: "hadir",
     },
     {
@@ -93,7 +86,6 @@ export default function RiwayatKehadiranPage() {
       extracurricular: "Basket",
       date: "2024-01-08",
       time: "15:30-17:00",
-      topic: "Defense Training",
       status: "hadir",
     },
     {
@@ -101,7 +93,6 @@ export default function RiwayatKehadiranPage() {
       extracurricular: "English Club",
       date: "2024-01-07",
       time: "14:00-15:30",
-      topic: "Presentation Skills",
       status: "sakit",
       note: "Flu",
     },
@@ -110,7 +101,6 @@ export default function RiwayatKehadiranPage() {
       extracurricular: "Basket",
       date: "2024-01-06",
       time: "15:30-17:00",
-      topic: "Team Strategy",
       status: "hadir",
     },
     {
@@ -118,7 +108,6 @@ export default function RiwayatKehadiranPage() {
       extracurricular: "English Club",
       date: "2024-01-05",
       time: "14:00-15:30",
-      topic: "Reading Comprehension",
       status: "hadir",
     },
   ]
@@ -133,7 +122,6 @@ export default function RiwayatKehadiranPage() {
   const filteredRecords = attendanceRecords.filter((record) => {
     const matchesSearch =
       record.extracurricular.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.date.includes(searchTerm)
 
     const matchesExtracurricular = filterExtracurricular === "all" || record.extracurricular === filterExtracurricular
@@ -211,76 +199,6 @@ export default function RiwayatKehadiranPage() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Filters */}
-        <Card className="mb-8 border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="grid md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="search">Cari</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="search"
-                    placeholder="Cari kegiatan, topik, atau tanggal..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="extracurricular">Ekstrakurikuler</Label>
-                <Select value={filterExtracurricular} onValueChange={setFilterExtracurricular}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Semua ekstrakurikuler" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Ekstrakurikuler</SelectItem>
-                    {extracurriculars.map((ekskul) => (
-                      <SelectItem key={ekskul} value={ekskul}>
-                        {ekskul}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger>
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Semua status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Status</SelectItem>
-                    <SelectItem value="hadir">Hadir</SelectItem>
-                    <SelectItem value="tidak_hadir">Tidak Hadir</SelectItem>
-                    <SelectItem value="izin">Izin</SelectItem>
-                    <SelectItem value="sakit">Sakit</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="month">Bulan</Label>
-                <Select value={filterMonth} onValueChange={setFilterMonth}>
-                  <SelectTrigger>
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Semua bulan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Bulan</SelectItem>
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Attendance Table */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
@@ -299,7 +217,6 @@ export default function RiwayatKehadiranPage() {
                     <th className="text-left p-4 font-medium text-gray-700">Tanggal</th>
                     <th className="text-left p-4 font-medium text-gray-700">Ekstrakurikuler</th>
                     <th className="text-left p-4 font-medium text-gray-700">Waktu</th>
-                    <th className="text-left p-4 font-medium text-gray-700">Topik Kegiatan</th>
                     <th className="text-center p-4 font-medium text-gray-700">Status</th>
                     <th className="text-left p-4 font-medium text-gray-700">Catatan</th>
                   </tr>
@@ -326,9 +243,6 @@ export default function RiwayatKehadiranPage() {
                           <Clock className="w-4 h-4 text-gray-400" />
                           <span className="text-sm">{record.time}</span>
                         </div>
-                      </td>
-                      <td className="p-4">
-                        <p className="text-sm font-medium">{record.topic}</p>
                       </td>
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center space-x-2">

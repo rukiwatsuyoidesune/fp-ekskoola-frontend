@@ -65,8 +65,8 @@ export default function LoginPage() {
 
               <TabsContent value="siswa" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="student-email">Email atau NIS</Label>
-                  <Input id="student-email" type="text" placeholder="Masukkan email atau NIS" className="h-11" />
+                  <Label htmlFor="student-email">Email</Label>
+                  <Input id="student-email" type="text" placeholder="Masukkan email" className="h-11" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="student-password">Password</Label>
@@ -103,8 +103,8 @@ export default function LoginPage() {
 
               <TabsContent value="pembina" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="teacher-email">Email atau NIP</Label>
-                  <Input id="teacher-email" type="text" placeholder="Masukkan email atau NIP" className="h-11" />
+                  <Label htmlFor="teacher-email">Email</Label>
+                  <Input id="teacher-email" type="text" placeholder="Masukkan email" className="h-11" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="teacher-password">Password</Label>

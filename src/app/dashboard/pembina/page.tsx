@@ -15,7 +15,7 @@ export default function SupervisorDashboard() {
   const supervisorData = {
     name: "Budi Santoso",
     nip: "198501012010011001",
-    position: "Pembina Ekstrakurikuler",
+    role: "Pembina",
     avatar: "/placeholder.svg?height=40&width=40",
   }
 
@@ -26,7 +26,6 @@ export default function SupervisorDashboard() {
       members: 18,
       maxMembers: 20,
       schedule: "Senin, Rabu 15:30-17:00",
-      nextActivity: "Latihan Rutin - Senin, 15:30",
       status: "active",
     },
     {
@@ -35,7 +34,6 @@ export default function SupervisorDashboard() {
       members: 15,
       maxMembers: 20,
       schedule: "Jumat 15:30-17:30",
-      nextActivity: "Workshop Arduino - Jumat, 15:30",
       status: "active",
     },
   ]
@@ -55,17 +53,6 @@ export default function SupervisorDashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="w-5 h-5" />
-              {notifications > 0 && (
-                <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs bg-red-500">
-                  {notifications}
-                </Badge>
-              )}
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Settings className="w-5 h-5" />
-            </Button>
             <Button variant="ghost" size="sm">
               <LogOut className="w-5 h-5" />
             </Button>
@@ -90,7 +77,7 @@ export default function SupervisorDashboard() {
               <div>
                 <h2 className="text-2xl font-bold">{supervisorData.name}</h2>
                 <p className="opacity-90">
-                  NIP: {supervisorData.nip} • {supervisorData.position}
+                  NIP: {supervisorData.nip} • {supervisorData.role}
                 </p>
                 <p className="opacity-90">Mengelola: {myExtracurriculars.length} Ekstrakurikuler</p>
               </div>
@@ -165,14 +152,12 @@ export default function SupervisorDashboard() {
                             Presensi
                           </Button>
                         </Link>
-                        <Button size="sm" variant="outline" className="text-xs bg-transparent">
-                          Kelola
-                        </Button>
+                        <Link href={`/dashboard/pembina/edit-ekstrakurikuler/${ekskul.id}`}>
+                          <Button size="sm" variant="outline" className="text-xs bg-transparent">
+                            Kelola
+                          </Button>
+                        </Link>
                       </div>
-                    </div>
-                    <div className="mt-3 p-3 bg-white rounded border-l-4 border-blue-500">
-                      <p className="text-sm font-medium text-blue-700">Kegiatan Selanjutnya:</p>
-                      <p className="text-sm">{ekskul.nextActivity}</p>
                     </div>
                   </div>
                 ))}
@@ -189,28 +174,7 @@ export default function SupervisorDashboard() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Stats */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle>Statistik</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Total Anggota</span>
-                  <span className="font-bold text-blue-600">33</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Kegiatan Minggu Ini</span>
-                  <span className="font-bold">4</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Rata-rata Kehadiran</span>
-                  <span className="font-bold text-green-600">89%</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <div className="space-y-6">{/* Quick Stats */}</div>
         </div>
       </div>
     </div>

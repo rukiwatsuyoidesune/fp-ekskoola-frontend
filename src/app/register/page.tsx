@@ -16,16 +16,23 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
+    nis: "",
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    agreeTerms: false,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
+
+    // Validate NIS
+    if (!formData.nis.trim()) {
+      newErrors.nis = "NIS wajib diisi"
+    } else if (!/^\d{10}$/.test(formData.nis)) {
+      newErrors.nis = "NIS harus 10 digit angka"
+    }
 
     // Validate name
     if (!formData.name.trim()) {
@@ -54,11 +61,6 @@ export default function RegisterPage() {
       newErrors.confirmPassword = "Konfirmasi password wajib diisi"
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Password tidak cocok"
-    }
-
-    // Validate terms agreement
-    if (!formData.agreeTerms) {
-      newErrors.agreeTerms = "Anda harus menyetujui syarat dan ketentuan"
     }
 
     setErrors(newErrors)
@@ -131,6 +133,28 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* NIS Field */}
+              <div className="space-y-2">
+                <Label htmlFor="nis" className="flex items-center space-x-2">
+                  <User className="w-4 h-4 text-blue-600" />
+                  <span>NIS (Nomor Induk Siswa)</span>
+                </Label>
+                <Input
+                  id="nis"
+                  type="text"
+                  placeholder="Masukkan NIS Anda"
+                  className={`h-11 ${errors.nis ? "border-red-500" : ""}`}
+                  value={formData.nis}
+                  onChange={(e) => handleInputChange("nis", e.target.value)}
+                />
+                {errors.nis && (
+                  <p className="text-sm text-red-500 flex items-center space-x-1">
+                    <AlertCircle className="w-4 h-4" />   
+                    <span>{errors.nis}</span> 
+                  </p>
+                )}
+              </div>
+              
               {/* Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="name" className="flex items-center space-x-2">
@@ -292,35 +316,6 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              {/* Terms and Conditions */}
-              <div className="space-y-2">
-                <div className="flex items-start space-x-2">
-                  <Checkbox
-                    id="agreeTerms"
-                    checked={formData.agreeTerms}
-                    onCheckedChange={(checked) => handleInputChange("agreeTerms", checked as boolean)}
-                    className="mt-1"
-                  />
-                  <Label htmlFor="agreeTerms" className="text-sm leading-relaxed cursor-pointer">
-                    Saya menyetujui{" "}
-                    <Link href="/terms" className="text-blue-600 hover:underline">
-                      Syarat dan Ketentuan
-                    </Link>{" "}
-                    serta{" "}
-                    <Link href="/privacy" className="text-blue-600 hover:underline">
-                      Kebijakan Privasi
-                    </Link>{" "}
-                    yang berlaku
-                  </Label>
-                </div>
-                {errors.agreeTerms && (
-                  <p className="text-sm text-red-500 flex items-center space-x-1">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errors.agreeTerms}</span>
-                  </p>
-                )}
-              </div>
-
               {/* Submit Button */}
               <Button
                 type="submit"
@@ -344,14 +339,6 @@ export default function RegisterPage() {
               <Link href="/login?role=siswa" className="text-blue-600 hover:underline font-medium">
                 Masuk di sini
               </Link>
-            </div>
-            <div className="text-xs text-gray-500 text-center">
-              <p>Dengan mendaftar, Anda akan dapat:</p>
-              <ul className="mt-2 space-y-1">
-                <li>• Mendaftar ekstrakurikuler favorit</li>
-                <li>• Memantau jadwal dan kehadiran</li>
-                <li>• Mendapat notifikasi kegiatan</li>
-              </ul>
             </div>
           </CardFooter>
         </Card>

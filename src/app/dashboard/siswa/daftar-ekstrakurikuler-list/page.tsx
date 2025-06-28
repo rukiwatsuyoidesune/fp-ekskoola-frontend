@@ -8,11 +8,10 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, ArrowLeft, Search, Filter, Plus, AlertCircle, Users, Clock, MapPin, User } from "lucide-react"
+import { BookOpen, ArrowLeft, Search, Filter, Plus, AlertCircle, Users, Clock, User } from "lucide-react"
 
 export default function DaftarEkstrakurikulerListPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [filterCategory, setFilterCategory] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
 
   // Data siswa saat ini
@@ -33,9 +32,7 @@ export default function DaftarEkstrakurikulerListPage() {
       maxMembers: 25,
       currentMembers: 18,
       registrationOpen: true,
-      category: "Bahasa",
       supervisor: "Mrs. Sarah Johnson",
-      location: "Ruang Bahasa",
     },
     {
       id: 3,
@@ -45,9 +42,7 @@ export default function DaftarEkstrakurikulerListPage() {
       maxMembers: 20,
       currentMembers: 15,
       registrationOpen: true,
-      category: "Teknologi",
       supervisor: "Pak Budi Santoso",
-      location: "Lab Komputer",
     },
     {
       id: 4,
@@ -57,9 +52,7 @@ export default function DaftarEkstrakurikulerListPage() {
       maxMembers: 25,
       currentMembers: 22,
       registrationOpen: true,
-      category: "Seni",
       supervisor: "Bu Sari Dewi",
-      location: "Aula Sekolah",
     },
     {
       id: 5,
@@ -69,9 +62,7 @@ export default function DaftarEkstrakurikulerListPage() {
       maxMembers: 16,
       currentMembers: 16,
       registrationOpen: false,
-      category: "Olahraga",
       supervisor: "Pak Ahmad Fauzi",
-      location: "Lapangan Futsal",
     },
     {
       id: 6,
@@ -81,9 +72,7 @@ export default function DaftarEkstrakurikulerListPage() {
       maxMembers: 30,
       currentMembers: 25,
       registrationOpen: true,
-      category: "Karakter",
       supervisor: "Pak Dedi Kurniawan",
-      location: "Lapangan Upacara",
     },
     {
       id: 7,
@@ -93,9 +82,7 @@ export default function DaftarEkstrakurikulerListPage() {
       maxMembers: 15,
       currentMembers: 12,
       registrationOpen: true,
-      category: "Seni",
       supervisor: "Bu Rina Melati",
-      location: "Studio Musik",
     },
     {
       id: 8,
@@ -105,9 +92,7 @@ export default function DaftarEkstrakurikulerListPage() {
       maxMembers: 20,
       currentMembers: 14,
       registrationOpen: true,
-      category: "Media",
       supervisor: "Pak Eko Prasetyo",
-      location: "Ruang Redaksi",
     },
     {
       id: 9,
@@ -117,9 +102,7 @@ export default function DaftarEkstrakurikulerListPage() {
       maxMembers: 18,
       currentMembers: 11,
       registrationOpen: true,
-      category: "Sains",
       supervisor: "Bu Dr. Maya Sari",
-      location: "Lab IPA",
     },
     {
       id: 10,
@@ -129,13 +112,9 @@ export default function DaftarEkstrakurikulerListPage() {
       maxMembers: 16,
       currentMembers: 13,
       registrationOpen: true,
-      category: "Bahasa",
       supervisor: "Pak Rudi Hartono",
-      location: "Ruang Diskusi",
     },
   ]
-
-  const categories = ["Bahasa", "Teknologi", "Seni", "Olahraga", "Karakter", "Media", "Sains"]
 
   const canRegister = (extracurricular: any) => {
     if (!extracurricular.registrationOpen) return { can: false, reason: "Pendaftaran ditutup" }
@@ -155,8 +134,6 @@ export default function DaftarEkstrakurikulerListPage() {
       ekskul.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ekskul.supervisor.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesCategory = filterCategory === "all" || ekskul.category === filterCategory
-
     const matchesStatus =
       filterStatus === "all" ||
       (filterStatus === "open" && ekskul.registrationOpen) ||
@@ -164,7 +141,7 @@ export default function DaftarEkstrakurikulerListPage() {
       (filterStatus === "available" && canRegister(ekskul).can) ||
       (filterStatus === "full" && ekskul.currentMembers >= ekskul.maxMembers)
 
-    return matchesSearch && matchesCategory && matchesStatus
+    return matchesSearch && matchesStatus
   })
 
   return (
@@ -194,7 +171,7 @@ export default function DaftarEkstrakurikulerListPage() {
         {/* Filters */}
         <Card className="mb-8 border-0 shadow-lg">
           <CardContent className="p-6">
-            <div className="grid md:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="search">Cari Ekstrakurikuler</Label>
                 <div className="relative">
@@ -207,22 +184,6 @@ export default function DaftarEkstrakurikulerListPage() {
                     className="pl-10"
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Kategori</Label>
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Semua kategori" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Kategori</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
@@ -262,9 +223,6 @@ export default function DaftarEkstrakurikulerListPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-lg mb-2">{ekskul.name}</CardTitle>
-                      <Badge variant="outline" className="text-xs mb-2">
-                        {ekskul.category}
-                      </Badge>
                     </div>
                     <Badge
                       className={`text-xs ${
@@ -282,10 +240,6 @@ export default function DaftarEkstrakurikulerListPage() {
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-gray-500" />
                       <span>{ekskul.schedule}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4 text-gray-500" />
-                      <span>{ekskul.location}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <User className="w-4 h-4 text-gray-500" />
@@ -352,7 +306,6 @@ export default function DaftarEkstrakurikulerListPage() {
                 variant="outline"
                 onClick={() => {
                   setSearchTerm("")
-                  setFilterCategory("all")
                   setFilterStatus("all")
                 }}
               >
