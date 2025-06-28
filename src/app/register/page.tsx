@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -20,6 +20,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    agreeTerms: false,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -53,6 +54,11 @@ export default function RegisterPage() {
       newErrors.confirmPassword = "Konfirmasi password wajib diisi"
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Password tidak cocok"
+    }
+
+    // Validate terms agreement
+    if (!formData.agreeTerms) {
+      newErrors.agreeTerms = "Anda harus menyetujui syarat dan ketentuan"
     }
 
     setErrors(newErrors)
@@ -286,6 +292,35 @@ export default function RegisterPage() {
                 )}
               </div>
 
+              {/* Terms and Conditions */}
+              <div className="space-y-2">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="agreeTerms"
+                    checked={formData.agreeTerms}
+                    onCheckedChange={(checked) => handleInputChange("agreeTerms", checked as boolean)}
+                    className="mt-1"
+                  />
+                  <Label htmlFor="agreeTerms" className="text-sm leading-relaxed cursor-pointer">
+                    Saya menyetujui{" "}
+                    <Link href="/terms" className="text-blue-600 hover:underline">
+                      Syarat dan Ketentuan
+                    </Link>{" "}
+                    serta{" "}
+                    <Link href="/privacy" className="text-blue-600 hover:underline">
+                      Kebijakan Privasi
+                    </Link>{" "}
+                    yang berlaku
+                  </Label>
+                </div>
+                {errors.agreeTerms && (
+                  <p className="text-sm text-red-500 flex items-center space-x-1">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{errors.agreeTerms}</span>
+                  </p>
+                )}
+              </div>
+
               {/* Submit Button */}
               <Button
                 type="submit"
@@ -303,6 +338,22 @@ export default function RegisterPage() {
               </Button>
             </form>
           </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-sm text-gray-600 text-center">
+              Sudah punya akun?{" "}
+              <Link href="/login?role=siswa" className="text-blue-600 hover:underline font-medium">
+                Masuk di sini
+              </Link>
+            </div>
+            <div className="text-xs text-gray-500 text-center">
+              <p>Dengan mendaftar, Anda akan dapat:</p>
+              <ul className="mt-2 space-y-1">
+                <li>• Mendaftar ekstrakurikuler favorit</li>
+                <li>• Memantau jadwal dan kehadiran</li>
+                <li>• Mendapat notifikasi kegiatan</li>
+              </ul>
+            </div>
+          </CardFooter>
         </Card>
       </div>
     </div>

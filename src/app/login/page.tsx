@@ -139,12 +139,6 @@ export default function LoginPage() {
                 </Button>
               </TabsContent>
             </Tabs>
-
-            <div className="mt-4 text-center">
-              <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
-                Lupa password?
-              </Link>
-            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2">
             <div className="text-sm text-gray-600 text-center">

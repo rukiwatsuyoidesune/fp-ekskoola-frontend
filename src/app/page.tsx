@@ -69,9 +69,7 @@ export default function HomePage() {
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold mb-4">Fitur Unggulan</h3>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Ekskoola menyediakan semua yang Anda butuhkan untuk mengelola ekstrakurikuler dengan efisien
-            </p>
+            
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -170,28 +168,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-blue-700 mb-2">500+</div>
-              <div className="text-gray-600">Siswa Aktif</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-blue-800 mb-2">50+</div>
-              <div className="text-gray-600">Ekstrakurikuler</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">25+</div>
-              <div className="text-gray-600">Pembina</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-blue-900 mb-2">98%</div>
-              <div className="text-gray-600">Kepuasan</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12 px-4">
@@ -203,17 +180,7 @@ export default function HomePage() {
             <h1 className="text-2xl font-bold">Ekskoola</h1>
           </div>
           <p className="text-gray-400 mb-4">Platform manajemen ekstrakurikuler terdepan untuk sekolah modern</p>
-          <div className="flex justify-center space-x-6 text-sm text-gray-400">
-            <Link href="/about" className="hover:text-white">
-              Tentang
-            </Link>
-            <Link href="/contact" className="hover:text-white">
-              Kontak
-            </Link>
-            <Link href="/help" className="hover:text-white">
-              Bantuan
-            </Link>
-          </div>
+          
         </div>
       </footer>
     </div>
