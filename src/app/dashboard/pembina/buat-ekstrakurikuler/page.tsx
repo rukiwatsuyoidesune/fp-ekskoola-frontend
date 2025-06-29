@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, BookOpen, Plus, Trash2, Lightbulb } from "lucide-react"
+import { ArrowLeft, BookOpen, Lightbulb } from "lucide-react"
 import Link from "next/link"
 
 interface Schedule {

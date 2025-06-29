@@ -55,7 +55,6 @@ function StudentDashboardContent() {
       currentMembers: 18,
       registrationOpen: true,
       supervisor: "Mrs. Sarah Johnson",
-      location: "Ruang Bahasa",
     },
     {
       id: 3,
@@ -66,7 +65,6 @@ function StudentDashboardContent() {
       currentMembers: 15,
       registrationOpen: true,
       supervisor: "Pak Budi Santoso",
-      location: "Lab Komputer",
     },
     {
       id: 4,
@@ -77,7 +75,6 @@ function StudentDashboardContent() {
       currentMembers: 22,
       registrationOpen: true,
       supervisor: "Bu Sari Dewi",
-      location: "Aula Sekolah",
     },
     {
       id: 5,
@@ -88,7 +85,6 @@ function StudentDashboardContent() {
       currentMembers: 16,
       registrationOpen: false,
       supervisor: "Pak Ahmad Fauzi",
-      location: "Lapangan Futsal",
     },
     {
       id: 6,
@@ -99,7 +95,6 @@ function StudentDashboardContent() {
       currentMembers: 25,
       registrationOpen: true,
       supervisor: "Pak Dedi Kurniawan",
-      location: "Lapangan Upacara",
     },
     {
       id: 7,
@@ -110,7 +105,6 @@ function StudentDashboardContent() {
       currentMembers: 12,
       registrationOpen: true,
       supervisor: "Bu Rina Melati",
-      location: "Studio Musik",
     },
     {
       id: 8,
@@ -121,7 +115,6 @@ function StudentDashboardContent() {
       currentMembers: 14,
       registrationOpen: true,
       supervisor: "Pak Eko Prasetyo",
-      location: "Ruang Redaksi",
     },
   ]
 

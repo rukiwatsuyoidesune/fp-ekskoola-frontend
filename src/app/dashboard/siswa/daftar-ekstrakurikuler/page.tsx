@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, User, BookOpen, Clock, MapPin, CheckCircle } from "lucide-react"
+import { ArrowLeft, User, BookOpen, Clock, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 function DaftarEkstrakurikulerContent() {
@@ -26,7 +25,6 @@ function DaftarEkstrakurikulerContent() {
   const studentData = {
     name: "Ahmad Rizki",
     nis: "2024001",
-    class: "XI IPA 2",
     email: "ahmad.rizki@student.school.id",
   }
 
@@ -36,19 +34,13 @@ function DaftarEkstrakurikulerContent() {
       name: "Robotika",
       description: "Belajar pemrograman dan robotika",
       schedule: "Jumat 15:30-17:30",
-      location: "Lab Komputer",
       supervisor: "Pak Budi Santoso",
-      category: "Teknologi",
-      requirements: ["Minat terhadap teknologi", "Kemampuan dasar komputer", "Komitmen waktu"],
     },
     "4": {
       name: "Teater",
       description: "Seni peran dan drama",
       schedule: "Sabtu 09:00-11:00",
-      location: "Aula Sekolah",
       supervisor: "Bu Sari Dewi",
-      category: "Seni",
-      requirements: ["Percaya diri", "Kemampuan komunikasi", "Kreativitas"],
     },
   }
 
@@ -150,10 +142,6 @@ function DaftarEkstrakurikulerContent() {
                         <Input id="nis" value={studentData.nis} readOnly className="bg-gray-50" />
                       </div>
                       <div>
-                        <Label htmlFor="class">Kelas</Label>
-                        <Input id="class" value={studentData.class} readOnly className="bg-gray-50" />
-                      </div>
-                      <div>
                         <Label htmlFor="email">Email</Label>
                         <Input id="email" value={studentData.email} readOnly className="bg-gray-50" />
                       </div>
@@ -174,7 +162,6 @@ function DaftarEkstrakurikulerContent() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>{currentEkskul.name}</span>
-                  <Badge variant="outline">{currentEkskul.category}</Badge>
                 </CardTitle>
                 <CardDescription>{currentEkskul.description}</CardDescription>
               </CardHeader>
@@ -188,31 +175,11 @@ function DaftarEkstrakurikulerContent() {
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <MapPin className="h-4 w-4 text-gray-500" />
-                  <div>
-                    <p className="text-sm font-medium">Lokasi</p>
-                    <p className="text-sm text-gray-600">{currentEkskul.location}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3">
                   <User className="h-4 w-4 text-gray-500" />
                   <div>
                     <p className="text-sm font-medium">Pembina</p>
                     <p className="text-sm text-gray-600">{currentEkskul.supervisor}</p>
                   </div>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium mb-2">Persyaratan</p>
-                  <ul className="space-y-1">
-                    {currentEkskul.requirements.map((req, index) => (
-                      <li key={index} className="text-sm text-gray-600 flex items-start">
-                        <span className="mr-2">•</span>
-                        {req}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </CardContent>
             </Card>
