@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { BookOpen, ClipboardList, Plus, LogOut, Trophy } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { jwtDecode } from "jwt-decode"
 
 type Extracurricular = {
   id: number
@@ -29,6 +30,14 @@ type SupervisorData = {
   role: string
 }
 
+type TokenPayload = {
+  sub: string
+  email: string
+  role: string
+  iat: number
+  exp: number
+}
+
 export default function PembinaDashboard() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -39,23 +48,29 @@ export default function PembinaDashboard() {
     const fetchData = async () => {
       const token = localStorage.getItem("token")
       if (!token) {
-        console.warn("Token tidak ditemukan, redirect ke login")
         router.push("/login?role=pembina")
         return
       }
 
       try {
+        const decoded: TokenPayload = jwtDecode(token)
+
+        // Validasi role pembina
+        if (decoded.role !== "pembina") {
+          console.warn("Akses ditolak: bukan pembina")
+          router.push("/login?role=pembina")
+          return
+        }
+
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pembina/dashboard`, {
-          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
 
-        if (!res.ok) throw new Error("Gagal fetch data")
+        if (!res.ok) throw new Error("Gagal fetch data dashboard")
 
         const data = await res.json()
-
         setSupervisorData({
           id: data.user.id,
           name: data.user.name,
@@ -65,6 +80,7 @@ export default function PembinaDashboard() {
         setMyExtracurriculars(data.extracurriculars)
       } catch (error) {
         console.error("Gagal mengambil data dashboard:", error)
+        router.push("/login?role=pembina")
       } finally {
         setLoading(false)
       }
@@ -75,6 +91,7 @@ export default function PembinaDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("token")
+    localStorage.removeItem("user")
     router.push("/login?role=pembina")
   }
 
