@@ -1,19 +1,28 @@
 "use client"
 
-import { useState } from "react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation" // Import useRouter from next/navigation
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BookOpen, Clock, Trophy, AlertCircle, Plus, LogOut } from "lucide-react"
 import Link from "next/link"
+import { fetchWithToken } from "@/lib/fetcher"
+import { jwtDecode } from "jwt-decode"
+
+type TokenPayload = {
+  sub: string // userId
+  email: string
+  role: string
+  iat: number
+  exp: number
+}
 
 /* ----------------------- */
 /* 1.  Wrapper Component   */
 /* ----------------------- */
 export default function StudentDashboard() {
-  // Create ONE QueryClient instance that lives for the lifetime of this page
   const [queryClient] = useState(() => new QueryClient())
 
   return (
@@ -27,106 +36,62 @@ export default function StudentDashboard() {
 /* 2.  Page UI Content     */
 /* ----------------------- */
 function StudentDashboardContent() {
-  const studentData = {
-    name: "Ahmad Rizki",
-    nis: "2024001",
-    avatar: "/placeholder.svg?height=40&width=40",
-  }
+  const router = useRouter()
+  const [userId, setUserId] = useState<number | null>(null)
 
-  const myExtracurriculars = [
-    {
-      id: 1,
-      name: "Basket",
-      schedule: "Senin, Rabu 15:30-17:00",
-      attendance: 85,
-      status: "active",
-      nextActivity: "Latihan Rutin • Senin 15:30",
-    },
-    // Remove English Club entry
-  ]
+  useEffect(() => {
+    // Ambil token dari localStorage
+    const token = localStorage.getItem("token")
 
-  const availableExtracurriculars = [
-    {
-      id: 2,
-      name: "English Club",
-      description: "Meningkatkan kemampuan bahasa Inggris melalui speaking, writing, dan presentation",
-      schedule: "Selasa, Kamis 14:00-15:30",
-      maxMembers: 25,
-      currentMembers: 18,
-      registrationOpen: true,
-      supervisor: "Mrs. Sarah Johnson",
-    },
-    {
-      id: 3,
-      name: "Robotika",
-      description: "Belajar pemrograman, elektronik, dan membuat robot untuk kompetisi",
-      schedule: "Jumat 15:30-17:30",
-      maxMembers: 20,
-      currentMembers: 15,
-      registrationOpen: true,
-      supervisor: "Pak Budi Santoso",
-    },
-    {
-      id: 4,
-      name: "Teater",
-      description: "Seni peran, drama, dan pengembangan kepercayaan diri melalui pertunjukan",
-      schedule: "Sabtu 09:00-11:00",
-      maxMembers: 25,
-      currentMembers: 22,
-      registrationOpen: true,
-      supervisor: "Bu Sari Dewi",
-    },
-    {
-      id: 5,
-      name: "Futsal",
-      description: "Olahraga futsal untuk meningkatkan kebugaran dan kerjasama tim",
-      schedule: "Senin 15:30-17:00", // Bentrok dengan basket
-      maxMembers: 16,
-      currentMembers: 16,
-      registrationOpen: false,
-      supervisor: "Pak Ahmad Fauzi",
-    },
-    {
-      id: 6,
-      name: "Pramuka",
-      description: "Kegiatan kepanduan untuk membentuk karakter dan leadership",
-      schedule: "Sabtu 14:00-16:00",
-      maxMembers: 30,
-      currentMembers: 25,
-      registrationOpen: true,
-      supervisor: "Pak Dedi Kurniawan",
-    },
-    {
-      id: 7,
-      name: "Musik",
-      description: "Band sekolah untuk mengembangkan bakat musik dan tampil di acara sekolah",
-      schedule: "Rabu 15:30-17:00", // Bentrok dengan basket
-      maxMembers: 15,
-      currentMembers: 12,
-      registrationOpen: true,
-      supervisor: "Bu Rina Melati",
-    },
-    {
-      id: 8,
-      name: "Jurnalistik",
-      description: "Menulis artikel, fotografi, dan mengelola media sekolah",
-      schedule: "Kamis 15:30-17:00",
-      maxMembers: 20,
-      currentMembers: 14,
-      registrationOpen: true,
-      supervisor: "Pak Eko Prasetyo",
-    },
-  ]
+    // Jika tidak ada token, arahkan ke halaman login
+    if (!token) {
+      console.warn("Tidak ada token ditemukan. Mengarahkan ke halaman login.")
+      router.push("/login")
+      return
+    }
 
-  const canRegister = (extracurricular: any) => {
-    if (!extracurricular.registrationOpen) return { can: false, reason: "Pendaftaran ditutup" }
-    if (extracurricular.currentMembers >= extracurricular.maxMembers) return { can: false, reason: "Kuota penuh" }
+    try {
+      // Decode token untuk mendapatkan payload
+      const decoded: TokenPayload = jwtDecode(token)
+
+      // **Validasi role pengguna**
+      // Pastikan role-nya adalah 'siswa'
+      if (decoded.role !== "siswa") {
+        console.warn(`Akses ditolak: Anda login sebagai ${decoded.role}, bukan siswa.`)
+        // Arahkan ke halaman login atau halaman dashboard yang sesuai dengan role
+        router.push("/login?error=unauthorized_role")
+        return
+      }
+
+      // Set userId dari 'sub' di payload, pastikan diubah ke number
+      setUserId(Number(decoded.sub))
+    } catch (error) {
+      console.error("Gagal mendekode token JWT atau token tidak valid:", error)
+      // Hapus token yang rusak dan arahkan ke login
+      localStorage.removeItem("token")
+      router.push("/login?error=invalid_token")
+    }
+  }, [router]) // Dependensi `router` untuk memastikan `useEffect` berjalan jika ada perubahan pada objek router
+
+  // Gunakan `userId` yang didapat dari token untuk query
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["dashboard", userId],
+    queryFn: () =>
+      fetchWithToken(`${process.env.NEXT_PUBLIC_API_URL}/siswa/dashboard?userId=${userId}`),
+    // Query hanya akan dieksekusi jika userId sudah ada
+    enabled: !!userId,
+  })
+
+  if (isLoading || userId === null) return <div className="p-8">Memuat...</div>
+  if (error) return <div className="p-8 text-red-600">Error: {(error as Error).message}</div>
+
+  const { user, allExtracurriculars, myExtracurriculars } = data
+
+  const canRegister = (ekskul: any) => {
+    if (+ekskul.JumlahAnggota >= ekskul.maxAnggota) return { can: false, reason: "Kuota penuh" }
     if (myExtracurriculars.length >= 2) return { can: false, reason: "Maksimal 2 ekstrakurikuler" }
-
-    // Jadwal bentrok?
-    const hasConflict = myExtracurriculars.some((my) => my.schedule.includes(extracurricular.schedule.split(" ")[0]))
-    if (hasConflict) return { can: false, reason: "Jadwal bentrok" }
-
+    const taken = myExtracurriculars.map((e: any) => e.ekstra.jadwal.hari)
+    if (taken.includes(ekskul.jadwal.hari)) return { can: false, reason: "Jadwal bentrok" }
     return { can: true, reason: "" }
   }
 
@@ -141,7 +106,7 @@ function StudentDashboardContent() {
             </div>
             <div>
               <h1 className="text-xl font-bold">Dashboard Siswa</h1>
-              <p className="text-sm text-gray-600">Selamat datang, {studentData.name}</p>
+              <p className="text-sm text-gray-600">Selamat datang, {user.name}</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -161,17 +126,17 @@ function StudentDashboardContent() {
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
               <Avatar className="h-16 w-16 border-2 border-white">
-                <AvatarImage src={studentData.avatar || "/placeholder.svg"} alt="avatar siswa" />
+                <AvatarImage src={user.avatar || "/placeholder.svg"} alt="avatar siswa" />
                 <AvatarFallback className="bg-white text-lg font-bold text-blue-600">
-                  {studentData.name
+                  {user.name
                     .split(" ")
-                    .map((n) => n[0])
+                    .map((n: string) => n[0])
                     .join("")}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-2xl font-bold">{studentData.name}</h2>
-                <p className="opacity-90">NIS: {studentData.nis}</p>
+                <h2 className="text-2xl font-bold">{user.name}</h2>
+                <p className="opacity-90">NIS: {user.nomorInduk}</p>
                 <p className="opacity-90">Ekstrakurikuler: {myExtracurriculars.length}/2</p>
               </div>
             </div>
@@ -219,32 +184,30 @@ function StudentDashboardContent() {
                 <CardDescription>Ekstrakurikuler yang sedang Anda ikuti</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {myExtracurriculars.map((ekskul) => (
-                  <div key={ekskul.id} className="rounded-lg border bg-gradient-to-r from-blue-50 to-blue-100 p-4">
-                    <div className="mb-3 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">{ekskul.name}</h3>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div>
-                        <p className="mb-1 text-sm text-gray-600">Jadwal</p>
-                        <p className="font-medium">{ekskul.schedule}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 rounded border-l-4 border-blue-500 bg-white p-3">
-                      <p className="text-sm font-medium text-blue-700">Kegiatan Selanjutnya:</p>
-                      <p className="text-sm">{ekskul.nextActivity}</p>
-                    </div>
-                  </div>
-                ))}
-
-                {myExtracurriculars.length === 0 && (
+                {myExtracurriculars.length === 0 ? (
                   <div className="py-8 text-center text-gray-500">
                     <Trophy className="mx-auto mb-4 h-12 w-12 opacity-50" />
                     <p>Anda belum mengikuti ekstrakurikuler apa pun</p>
                     <p className="text-sm">Daftar ekstrakurikuler untuk memulai!</p>
                   </div>
+                ) : (
+                  myExtracurriculars.map((item: any) => (
+                    <div key={item.id} className="rounded-lg border bg-gradient-to-r from-blue-50 to-blue-100 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">{item.ekstra.name}</h3>
+                      </div>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                          <p className="mb-1 text-sm text-gray-600">Jadwal</p>
+                          <p className="font-medium">{item.ekstra.jadwal.hari}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 rounded border-l-4 border-blue-500 bg-white p-3">
+                        <p className="text-sm font-medium text-blue-700">Status:</p>
+                        <p className="text-sm">{item.status}</p>
+                      </div>
+                    </div>
+                  ))
                 )}
               </CardContent>
             </Card>
@@ -266,7 +229,7 @@ function StudentDashboardContent() {
                 <CardDescription>Ekstrakurikuler yang dapat Anda ikuti</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {availableExtracurriculars.slice(0, 3).map((ekskul) => {
+                {allExtracurriculars.slice(0, 3).map((ekskul: any) => {
                   const registerStatus = canRegister(ekskul)
                   return (
                     <div key={ekskul.id} className="rounded-lg border p-4 transition-shadow hover:shadow-md">
@@ -291,20 +254,18 @@ function StudentDashboardContent() {
                           </Button>
                         )}
                       </div>
-
                       <div className="grid gap-4 text-sm md:grid-cols-2">
                         <div>
                           <p className="text-gray-600">Jadwal</p>
-                          <p className="font-medium">{ekskul.schedule}</p>
+                          <p className="font-medium">{ekskul.jadwal.hari}</p>
                         </div>
                         <div>
                           <p className="text-gray-600">Anggota</p>
                           <span className="font-medium text-xs">
-                            {ekskul.currentMembers}/{ekskul.maxMembers}
+                            {ekskul.JumlahAnggota}/{ekskul.maxAnggota}
                           </span>
                         </div>
                       </div>
-
                       {!registerStatus.can && (
                         <div className="mt-3 rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">
                           <AlertCircle className="mr-1 inline h-4 w-4" />
@@ -314,11 +275,10 @@ function StudentDashboardContent() {
                     </div>
                   )
                 })}
-
                 <div className="text-center pt-4">
                   <Link href="/dashboard/siswa/daftar-ekstrakurikuler-list">
                     <Button variant="outline" className="w-full bg-transparent">
-                      Lihat Semua Ekstrakurikuler ({availableExtracurriculars.length})
+                      Lihat Semua Ekstrakurikuler ({allExtracurriculars.length})
                     </Button>
                   </Link>
                 </div>
