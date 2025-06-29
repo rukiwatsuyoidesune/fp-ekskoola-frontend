@@ -4,10 +4,22 @@ import { useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
 import { BookOpen, Users, Trophy, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
@@ -16,23 +28,61 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const defaultRole = searchParams.get("role") || "siswa"
 
+  const [emailSiswa, setEmailSiswa] = useState("")
+  const [passwordSiswa, setPasswordSiswa] = useState("")
+  const [emailPembina, setEmailPembina] = useState("")
+  const [passwordPembina, setPasswordPembina] = useState("")
+
   const handleLogin = async (role: string) => {
     setIsLoading(true)
-    // Simulate login process
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      const payload = {
+        email: role === "siswa" ? emailSiswa : emailPembina,
+        password: role === "siswa" ? passwordSiswa : passwordPembina,
+      }
 
-    // Redirect based on role
-    if (role === "siswa") {
-      window.location.href = "/dashboard/siswa"
-    } else {
-      window.location.href = "/dashboard/pembina"
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/signin`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Login gagal")
+      }
+
+      const data = await response.json()
+      console.log("LOGIN SUCCESS:", data)
+
+      // simpan token dan user
+      if (data.access_token) {
+        localStorage.setItem("token", data.access_token)
+      }
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user))
+      }
+
+      // redirect
+      if (role === "siswa") {
+        window.location.href = "/dashboard/siswa"
+      } else {
+        window.location.href = "/dashboard/pembina"
+      }
+    } catch (err: any) {
+      alert(`Login gagal: ${err.message}`)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
+        {/* header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2 mb-4">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-700 to-blue-900 rounded-lg flex items-center justify-center">
@@ -48,25 +98,41 @@ export default function LoginPage() {
         <Card className="border-0 shadow-xl">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-2xl text-center">Masuk</CardTitle>
-            <CardDescription className="text-center">Pilih peran Anda untuk melanjutkan</CardDescription>
+            <CardDescription className="text-center">
+              Pilih peran Anda untuk melanjutkan
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue={defaultRole} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="siswa" className="flex items-center space-x-2">
+                <TabsTrigger
+                  value="siswa"
+                  className="flex items-center space-x-2"
+                >
                   <Users className="w-4 h-4" />
                   <span>Siswa</span>
                 </TabsTrigger>
-                <TabsTrigger value="pembina" className="flex items-center space-x-2">
+                <TabsTrigger
+                  value="pembina"
+                  className="flex items-center space-x-2"
+                >
                   <Trophy className="w-4 h-4" />
                   <span>Pembina</span>
                 </TabsTrigger>
               </TabsList>
 
+              {/* siswa */}
               <TabsContent value="siswa" className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="student-email">Email</Label>
-                  <Input id="student-email" type="text" placeholder="Masukkan email" className="h-11" />
+                  <Input
+                    id="student-email"
+                    type="email"
+                    placeholder="Masukkan email"
+                    className="h-11"
+                    value={emailSiswa}
+                    onChange={(e) => setEmailSiswa(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="student-password">Password</Label>
@@ -76,6 +142,8 @@ export default function LoginPage() {
                       type={showPassword ? "text" : "password"}
                       placeholder="Masukkan password"
                       className="h-11 pr-10"
+                      value={passwordSiswa}
+                      onChange={(e) => setPasswordSiswa(e.target.value)}
                     />
                     <Button
                       type="button"
@@ -85,9 +153,9 @@ export default function LoginPage() {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye className="h-4 w-4" />
                       )}
                     </Button>
                   </div>
@@ -101,10 +169,18 @@ export default function LoginPage() {
                 </Button>
               </TabsContent>
 
+              {/* pembina */}
               <TabsContent value="pembina" className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="teacher-email">Email</Label>
-                  <Input id="teacher-email" type="text" placeholder="Masukkan email" className="h-11" />
+                  <Input
+                    id="teacher-email"
+                    type="email"
+                    placeholder="Masukkan email"
+                    className="h-11"
+                    value={emailPembina}
+                    onChange={(e) => setEmailPembina(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="teacher-password">Password</Label>
@@ -114,6 +190,8 @@ export default function LoginPage() {
                       type={showPassword ? "text" : "password"}
                       placeholder="Masukkan password"
                       className="h-11 pr-10"
+                      value={passwordPembina}
+                      onChange={(e) => setPasswordPembina(e.target.value)}
                     />
                     <Button
                       type="button"
@@ -123,9 +201,9 @@ export default function LoginPage() {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye className="h-4 w-4" />
                       )}
                     </Button>
                   </div>
@@ -143,7 +221,10 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col space-y-2">
             <div className="text-sm text-gray-600 text-center">
               Belum punya akun?{" "}
-              <Link href="/register" className="text-blue-600 hover:underline font-medium">
+              <Link
+                href="/register"
+                className="text-blue-600 hover:underline font-medium"
+              >
                 Daftar sebagai siswa
               </Link>
             </div>

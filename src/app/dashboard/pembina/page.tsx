@@ -1,42 +1,101 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, ClipboardList, Plus, Bell, Settings, LogOut, Trophy } from "lucide-react"
+import { BookOpen, ClipboardList, Plus, LogOut, Trophy } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { jwtDecode } from "jwt-decode"
 
-export default function SupervisorDashboard() {
-  const [notifications] = useState(2)
+type Extracurricular = {
+  id: number
+  name: string
+  JumlahAnggota: number
+  maxAnggota: number
+  jadwal?: {
+    hari: string
+    waktuMulai: string
+    waktuSelesai: string
+  } | null
+}
 
-  const supervisorData = {
-    name: "Budi Santoso",
-    nip: "198501012010011001",
-    role: "Pembina",
-    avatar: "/placeholder.svg?height=40&width=40",
+type SupervisorData = {
+  id: string
+  name: string
+  nomorInduk: string
+  role: string
+}
+
+type TokenPayload = {
+  sub: string
+  email: string
+  role: string
+  iat: number
+  exp: number
+}
+
+export default function PembinaDashboard() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [supervisorData, setSupervisorData] = useState<SupervisorData | null>(null)
+  const [myExtracurriculars, setMyExtracurriculars] = useState<Extracurricular[]>([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        router.push("/login?role=pembina")
+        return
+      }
+
+      try {
+        const decoded: TokenPayload = jwtDecode(token)
+
+        // Validasi role pembina
+        if (decoded.role !== "pembina") {
+          console.warn("Akses ditolak: bukan pembina")
+          router.push("/login?role=pembina")
+          return
+        }
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pembina/dashboard`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!res.ok) throw new Error("Gagal fetch data dashboard")
+
+        const data = await res.json()
+        setSupervisorData({
+          id: data.user.id,
+          name: data.user.name,
+          nomorInduk: data.user.nomorInduk,
+          role: data.user.role,
+        })
+        setMyExtracurriculars(data.extracurriculars)
+      } catch (error) {
+        console.error("Gagal mengambil data dashboard:", error)
+        router.push("/login?role=pembina")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [router])
+
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    router.push("/login?role=pembina")
   }
 
-  const myExtracurriculars = [
-    {
-      id: 1,
-      name: "Basket",
-      members: 18,
-      maxMembers: 20,
-      schedule: "Senin, Rabu 15:30-17:00",
-      status: "active",
-    },
-    {
-      id: 2,
-      name: "Robotika",
-      members: 15,
-      maxMembers: 20,
-      schedule: "Jumat 15:30-17:30",
-      status: "active",
-    },
-  ]
+  if (loading) return <div>Loading...</div>
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -49,11 +108,11 @@ export default function SupervisorDashboard() {
             </div>
             <div>
               <h1 className="text-xl font-bold">Dashboard Pembina</h1>
-              <p className="text-sm text-gray-600">Selamat datang, {supervisorData.name}</p>
+              <p className="text-sm text-gray-600">Selamat datang, {supervisorData?.name}</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="w-5 h-5" />
             </Button>
           </div>
@@ -66,20 +125,22 @@ export default function SupervisorDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
               <Avatar className="w-16 h-16 border-2 border-white">
-                <AvatarImage src={supervisorData.avatar || "/placeholder.svg"} />
+                <AvatarImage src="/placeholder.svg" />
                 <AvatarFallback className="bg-white text-blue-600 text-lg font-bold">
-                  {supervisorData.name
-                    .split(" ")
+                  {supervisorData?.name
+                    ?.split(" ")
                     .map((n) => n[0])
                     .join("")}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-2xl font-bold">{supervisorData.name}</h2>
+                <h2 className="text-2xl font-bold">{supervisorData?.name}</h2>
                 <p className="opacity-90">
-                  NIP: {supervisorData.nip} • {supervisorData.role}
+                  NIP: {supervisorData?.nomorInduk} • {supervisorData?.role}
                 </p>
-                <p className="opacity-90">Mengelola: {myExtracurriculars.length} Ekstrakurikuler</p>
+                <p className="opacity-90">
+                  Mengelola: {myExtracurriculars.length} Ekstrakurikuler
+                </p>
               </div>
             </div>
           </CardContent>
@@ -136,15 +197,22 @@ export default function SupervisorDashboard() {
                       <div>
                         <p className="text-sm text-gray-600 mb-1">Anggota</p>
                         <div className="flex items-center space-x-2">
-                          <Progress value={(ekskul.members / ekskul.maxMembers) * 100} className="flex-1" />
+                          <Progress
+                            value={(ekskul.JumlahAnggota / ekskul.maxAnggota) * 100}
+                            className="flex-1"
+                          />
                           <span className="text-sm font-medium">
-                            {ekskul.members}/{ekskul.maxMembers}
+                            {ekskul.JumlahAnggota}/{ekskul.maxAnggota}
                           </span>
                         </div>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 mb-1">Jadwal</p>
-                        <p className="font-medium text-sm">{ekskul.schedule}</p>
+                        <p className="font-medium text-sm">
+                          {ekskul.jadwal
+                            ? `${ekskul.jadwal.hari}, ${ekskul.jadwal.waktuMulai} - ${ekskul.jadwal.waktuSelesai}`
+                            : "Belum ada jadwal"}
+                        </p>
                       </div>
                       <div className="flex space-x-2">
                         <Link href="/dashboard/pembina/presensi">
@@ -161,7 +229,6 @@ export default function SupervisorDashboard() {
                     </div>
                   </div>
                 ))}
-
                 {myExtracurriculars.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -174,7 +241,7 @@ export default function SupervisorDashboard() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">{/* Quick Stats */}</div>
+          <div className="space-y-6"></div>
         </div>
       </div>
     </div>
