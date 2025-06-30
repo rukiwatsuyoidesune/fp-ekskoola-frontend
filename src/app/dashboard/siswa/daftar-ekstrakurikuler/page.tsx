@@ -1,66 +1,95 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, Suspense } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ArrowLeft, User, BookOpen, Clock, CheckCircle } from "lucide-react"
-import Link from "next/link"
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, User, BookOpen, Clock, CheckCircle } from "lucide-react";
+import Link from "next/link";
 
 function DaftarEkstrakurikulerContent() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [formData, setFormData] = useState({})
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const ekstrakurikulerId = searchParams.get("id")
-  const ekstrakurikulerName = searchParams.get("name")
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [data, setData] = useState<any>(null);
+  const [isFetching, setIsFetching] = useState(true);
 
-  // Mock data siswa
-  const studentData = {
-    name: "Ahmad Rizki",
-    nis: "2024001",
-    email: "ahmad.rizki@student.school.id",
-  }
+  const ekskulId = searchParams.get("id");
+  const userId = searchParams.get("userId");
+  
+  // GET data dari API
+  useEffect(() => {
+    if (!ekskulId || !userId) return;
 
-  // Mock data ekstrakurikuler berdasarkan ID
-  const ekstrakurikulerData = {
-    "3": {
-      name: "Robotika",
-      description: "Belajar pemrograman dan robotika",
-      schedule: "Jumat 15:30-17:30",
-      supervisor: "Pak Budi Santoso",
-    },
-    "4": {
-      name: "Teater",
-      description: "Seni peran dan drama",
-      schedule: "Sabtu 09:00-11:00",
-      supervisor: "Bu Sari Dewi",
-    },
-  }
+    const fetchData = async () => {
+      setIsFetching(true);
+      try {
+        const res = await fetch(
+          `http://localhost:3001/form-pendaftaran/${ekskulId}?userId=${userId}`
+        );
+        if (!res.ok) throw new Error("Gagal mengambil data");
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsFetching(false);
+      }
+    };
 
-  const currentEkskul = ekstrakurikulerData[ekstrakurikulerId as keyof typeof ekstrakurikulerData]
+    fetchData();
+  }, [ekskulId, userId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    if (!ekskulId || !userId) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
+    try {
+      const res = await fetch("http://localhost:3001/pendaftaran", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ekskulId: Number(ekskulId),
+          userId: Number(userId),
+        }),
+      });
 
-    // Simulasi API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+      if (!res.ok) throw new Error("Gagal mendaftar");
+      setIsSuccess(true);
 
-    setIsLoading(false)
-    setIsSuccess(true)
+      // Redirect
+      setTimeout(() => {
+        router.push("/dashboard/siswa");
+      }, 3000);
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan saat mendaftar");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // Redirect setelah 3 detik
-    setTimeout(() => {
-      router.push("/dashboard/siswa")
-    }, 3000)
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Memuat data...</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Data tidak ditemukan</p>
+      </div>
+    );
   }
 
   if (isSuccess) {
@@ -71,28 +100,13 @@ function DaftarEkstrakurikulerContent() {
             <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-500" />
             <h2 className="text-2xl font-bold text-green-700 mb-2">Pendaftaran Berhasil!</h2>
             <p className="text-gray-600 mb-4">
-              Anda telah berhasil mendaftar ekstrakurikuler <strong>{currentEkskul?.name}</strong>
+              Anda telah berhasil mendaftar ekstrakurikuler <strong>{data.ekskul.name}</strong>
             </p>
             <p className="text-sm text-gray-500">Mengarahkan kembali ke dashboard...</p>
           </CardContent>
         </Card>
       </div>
-    )
-  }
-
-  if (!currentEkskul) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <Card className="w-full max-w-md border-0 shadow-lg">
-          <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-bold text-red-600 mb-4">Ekstrakurikuler Tidak Ditemukan</h2>
-            <Link href="/dashboard/siswa">
-              <Button className="bg-blue-700 hover:bg-blue-800">Kembali ke Dashboard</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    )
+    );
   }
 
   return (
@@ -109,7 +123,7 @@ function DaftarEkstrakurikulerContent() {
             </Link>
             <div>
               <h1 className="text-xl font-bold">Daftar Ekstrakurikuler</h1>
-              <p className="text-sm text-gray-600">{currentEkskul.name}</p>
+              <p className="text-sm text-gray-600">{data.ekskul.name}</p>
             </div>
           </div>
         </div>
@@ -129,21 +143,20 @@ function DaftarEkstrakurikulerContent() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Data Siswa (Read-only) */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900">Data Siswa</h3>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <Label htmlFor="name">Nama Lengkap</Label>
-                        <Input id="name" value={studentData.name} readOnly className="bg-gray-50" />
+                        <Label>Nama Lengkap</Label>
+                        <Input value={data.profile.name} readOnly className="bg-gray-50" />
                       </div>
                       <div>
-                        <Label htmlFor="nis">NIS</Label>
-                        <Input id="nis" value={studentData.nis} readOnly className="bg-gray-50" />
+                        <Label>NIS</Label>
+                        <Input value={data.profile.nis} readOnly className="bg-gray-50" />
                       </div>
                       <div>
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" value={studentData.email} readOnly className="bg-gray-50" />
+                        <Label>Email</Label>
+                        <Input value={data.profile.email} readOnly className="bg-gray-50" />
                       </div>
                     </div>
                   </div>
@@ -160,25 +173,22 @@ function DaftarEkstrakurikulerContent() {
           <div>
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>{currentEkskul.name}</span>
-                </CardTitle>
-                <CardDescription>{currentEkskul.description}</CardDescription>
+                <CardTitle>{data.ekskul.name}</CardTitle>
+                <CardDescription>{data.ekskul.description}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <Clock className="h-4 w-4 text-gray-500" />
                   <div>
                     <p className="text-sm font-medium">Jadwal</p>
-                    <p className="text-sm text-gray-600">{currentEkskul.schedule}</p>
+                    <p className="text-sm text-gray-600">{data.ekskul.schedule}</p>
                   </div>
                 </div>
-
                 <div className="flex items-center space-x-3">
                   <User className="h-4 w-4 text-gray-500" />
                   <div>
                     <p className="text-sm font-medium">Pembina</p>
-                    <p className="text-sm text-gray-600">{currentEkskul.supervisor}</p>
+                    <p className="text-sm text-gray-600">{data.ekskul.supervisor}</p>
                   </div>
                 </div>
               </CardContent>
@@ -187,7 +197,7 @@ function DaftarEkstrakurikulerContent() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function DaftarEkstrakurikuler() {
@@ -195,5 +205,5 @@ export default function DaftarEkstrakurikuler() {
     <Suspense fallback={<div>Loading...</div>}>
       <DaftarEkstrakurikulerContent />
     </Suspense>
-  )
+  );
 }
