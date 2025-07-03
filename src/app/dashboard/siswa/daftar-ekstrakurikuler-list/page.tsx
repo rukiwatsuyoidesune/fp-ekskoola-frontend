@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,140 +11,165 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BookOpen, ArrowLeft, Search, Filter, Plus, AlertCircle, Users, Clock, User } from "lucide-react"
+import { fetchWithToken } from "@/lib/fetcher"
+import { jwtDecode } from "jwt-decode"
 
-export default function DaftarEkstrakurikulerListPage() {
+// Definisi tipe data untuk payload token JWT
+type TokenPayload = {
+  sub: string
+  email: string
+  role: string
+  iat: number
+  exp: number
+}
+
+// Definisi tipe data untuk Ekstrakurikuler dari backend
+type Extracurricular = {
+  id: number
+  name: string
+  description: string // **Perbaikan: Mengubah dari number menjadi string**
+  maxAnggota: number
+  JumlahAnggota: number
+  // registrationOpen: boolean // Tidak ada di Postman, asumsi diturunkan dari kondisi lain
+  pembina_id: number; // Menambahkan properti pembina_id sesuai Postman
+  periode_start: string; // Menambahkan properti periode_start
+  periode_end: string; // Menambahkan properti periode_end
+  jadwal_id: number; // Menambahkan properti jadwal_id
+  jadwal: {
+    hari: string
+    waktuMulai: string
+    waktuSelesai: string
+  }
+  // **Perbaikan: Mengganti 'users' dengan 'pembina' sesuai output Postman**
+  pembina: {
+    id: number
+    name: string
+  } | null // Menambahkan | null karena relasi mungkin kosong
+}
+
+// Definisi tipe data untuk Ekstrakurikuler yang diikuti siswa
+type MyExtracurricular = {
+  id: number
+  status: string
+  register_at: string;
+  ekstra: Extracurricular // Nested object for extracurricular details
+}
+
+/* ----------------------- */
+/* 1. Wrapper Component */
+/* ----------------------- */
+export default function DaftarEkstrakurikulerListPageWrapper() {
+  const [queryClient] = useState(() => new QueryClient())
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <DaftarEkstrakurikulerListPageContent />
+    </QueryClientProvider>
+  )
+}
+
+/* ----------------------- */
+/* 2. Page UI Content */
+/* ----------------------- */
+function DaftarEkstrakurikulerListPageContent() {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
+  const [userId, setUserId] = useState<number | null>(null)
 
-  // Data siswa saat ini
-  const myExtracurriculars = [
-    {
-      id: 1,
-      name: "Basket",
-      schedule: "Senin, Rabu 15:30-17:00",
-    },
-  ]
+  useEffect(() => {
+    const token = localStorage.getItem("token")
 
-  const availableExtracurriculars = [
-    {
-      id: 2,
-      name: "English Club",
-      description: "Meningkatkan kemampuan bahasa Inggris melalui speaking, writing, dan presentation",
-      schedule: "Selasa, Kamis 14:00-15:30",
-      maxMembers: 25,
-      currentMembers: 18,
-      registrationOpen: true,
-      supervisor: "Mrs. Sarah Johnson",
-    },
-    {
-      id: 3,
-      name: "Robotika",
-      description: "Belajar pemrograman, elektronik, dan membuat robot untuk kompetisi",
-      schedule: "Jumat 15:30-17:30",
-      maxMembers: 20,
-      currentMembers: 15,
-      registrationOpen: true,
-      supervisor: "Pak Budi Santoso",
-    },
-    {
-      id: 4,
-      name: "Teater",
-      description: "Seni peran, drama, dan pengembangan kepercayaan diri melalui pertunjukan",
-      schedule: "Sabtu 09:00-11:00",
-      maxMembers: 25,
-      currentMembers: 22,
-      registrationOpen: true,
-      supervisor: "Bu Sari Dewi",
-    },
-    {
-      id: 5,
-      name: "Futsal",
-      description: "Olahraga futsal untuk meningkatkan kebugaran dan kerjasama tim",
-      schedule: "Senin 15:30-17:00",
-      maxMembers: 16,
-      currentMembers: 16,
-      registrationOpen: false,
-      supervisor: "Pak Ahmad Fauzi",
-    },
-    {
-      id: 6,
-      name: "Pramuka",
-      description: "Kegiatan kepanduan untuk membentuk karakter dan leadership",
-      schedule: "Sabtu 14:00-16:00",
-      maxMembers: 30,
-      currentMembers: 25,
-      registrationOpen: true,
-      supervisor: "Pak Dedi Kurniawan",
-    },
-    {
-      id: 7,
-      name: "Musik",
-      description: "Band sekolah untuk mengembangkan bakat musik dan tampil di acara sekolah",
-      schedule: "Rabu 15:30-17:00",
-      maxMembers: 15,
-      currentMembers: 12,
-      registrationOpen: true,
-      supervisor: "Bu Rina Melati",
-    },
-    {
-      id: 8,
-      name: "Jurnalistik",
-      description: "Menulis artikel, fotografi, dan mengelola media sekolah",
-      schedule: "Kamis 15:30-17:00",
-      maxMembers: 20,
-      currentMembers: 14,
-      registrationOpen: true,
-      supervisor: "Pak Eko Prasetyo",
-    },
-    {
-      id: 9,
-      name: "Sains Club",
-      description: "Eksperimen sains, penelitian, dan persiapan olimpiade sains",
-      schedule: "Selasa 15:30-17:00",
-      maxMembers: 18,
-      currentMembers: 11,
-      registrationOpen: true,
-      supervisor: "Bu Dr. Maya Sari",
-    },
-    {
-      id: 10,
-      name: "Debat",
-      description: "Melatih kemampuan argumentasi, public speaking, dan berpikir kritis",
-      schedule: "Jumat 14:00-15:30",
-      maxMembers: 16,
-      currentMembers: 13,
-      registrationOpen: true,
-      supervisor: "Pak Rudi Hartono",
-    },
-  ]
+    if (!token) {
+      console.warn("Tidak ada token ditemukan. Mengarahkan ke halaman login.")
+      router.push("/login")
+      return
+    }
 
-  const canRegister = (extracurricular: any) => {
-    if (!extracurricular.registrationOpen) return { can: false, reason: "Pendaftaran ditutup" }
-    if (extracurricular.currentMembers >= extracurricular.maxMembers) return { can: false, reason: "Kuota penuh" }
-    if (myExtracurriculars.length >= 2) return { can: false, reason: "Maksimal 2 ekstrakurikuler" }
+    try {
+      const decoded: TokenPayload = jwtDecode(token)
 
-    // Jadwal bentrok?
-    const hasConflict = myExtracurriculars.some((my) => my.schedule.includes(extracurricular.schedule.split(" ")[0]))
-    if (hasConflict) return { can: false, reason: "Jadwal bentrok" }
+      if (decoded.role !== "siswa") {
+        console.warn(`Akses ditolak: Anda login sebagai ${decoded.role}, bukan siswa.`)
+        router.push("/login?error=unauthorized_role")
+        return
+      }
+      setUserId(Number(decoded.sub))
+    } catch (error) {
+      console.error("Gagal mendekode token JWT atau token tidak valid:", error)
+      localStorage.removeItem("token")
+      router.push("/login?error=invalid_token")
+    }
+  }, [router])
 
-    return { can: true, reason: "" }
-  }
+  // Fetch data ekstrakurikuler yang tersedia dan yang sudah diikuti siswa
+  const {
+    data: dashboardData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["ekstrakurikulerList", userId],
+    queryFn: () =>
+      fetchWithToken(`${process.env.NEXT_PUBLIC_API_URL}/siswa/dashboard?userId=${userId}`),
+    enabled: !!userId, // Hanya jalankan query jika userId sudah ada
+  })
 
+  // Destrukturisasi data setelah dimuat
+  const availableExtracurriculars: Extracurricular[] = dashboardData?.allExtracurriculars || []
+  const myExtracurriculars: MyExtracurricular[] = dashboardData?.myExtracurriculars || []
+
+  // Fungsi untuk mengecek apakah bisa mendaftar
+  const canRegister = (extracurricular: Extracurricular) => {
+    // Asumsi registrationOpen true jika kuota belum penuh dan tidak bentrok
+    // Berdasarkan Postman, tidak ada registrationOpen, jadi kita buat asumsi ini
+    const isRegistrationOpen = true; // Asumsi selalu buka, atau tambahkan properti di backend
+
+    if (!isRegistrationOpen) return { can: false, reason: "Pendaftaran ditutup." }; // Sesuaikan pesan
+    if (extracurricular.JumlahAnggota >= extracurricular.maxAnggota) return { can: false, reason: "Kuota penuh" };
+    if (myExtracurriculars.length >= 2) return { can: false, reason: "Maksimal 2 ekstrakurikuler" };
+
+    // Cek jadwal bentrok
+    const hasConflict = myExtracurriculars.some(
+      (my) => my.ekstra.jadwal.hari === extracurricular.jadwal.hari
+    );
+    if (hasConflict) return { can: false, reason: "Jadwal bentrok dengan ekstrakurikuler yang sudah Anda ikuti" };
+
+    return { can: true, reason: "" };
+  };
+
+  // Filter ekstrakurikuler berdasarkan pencarian dan status
   const filteredExtracurriculars = availableExtracurriculars.filter((ekskul) => {
+    const ekskulName = ekskul.name ? ekskul.name.toLowerCase() : '';
+    const ekskulDescription = ekskul.description ? ekskul.description.toLowerCase() : '';
+    // **Perbaikan: Menggunakan ekskul.pembina?.name untuk pencarian**
+    const ekskulSupervisorName = ekskul.pembina?.name ? ekskul.pembina.name.toLowerCase() : '';
+
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+
     const matchesSearch =
-      ekskul.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ekskul.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ekskul.supervisor.toLowerCase().includes(searchTerm.toLowerCase())
+      ekskulName.includes(lowerCaseSearchTerm) ||
+      ekskulDescription.includes(lowerCaseSearchTerm) ||
+      ekskulSupervisorName.includes(lowerCaseSearchTerm); // Pencarian sekarang mencakup nama pembina
+
+    const registerStatus = canRegister(ekskul);
 
     const matchesStatus =
       filterStatus === "all" ||
-      (filterStatus === "open" && ekskul.registrationOpen) ||
-      (filterStatus === "closed" && !ekskul.registrationOpen) ||
-      (filterStatus === "available" && canRegister(ekskul).can) ||
-      (filterStatus === "full" && ekskul.currentMembers >= ekskul.maxMembers)
+      (filterStatus === "open" && registerStatus.can) ||
+      (filterStatus === "closed" && !registerStatus.can) ||
+      (filterStatus === "available" && registerStatus.can) ||
+      (filterStatus === "full" && ekskul.JumlahAnggota >= ekskul.maxAnggota);
 
-    return matchesSearch && matchesStatus
-  })
+    return matchesSearch && matchesStatus;
+  });
+
+  if (isLoading || userId === null) return <div className="p-8">Memuat daftar ekstrakurikuler...</div>
+  if (error)
+    return (
+      <div className="p-8 text-red-600">
+        Error memuat data: {(error as Error).message}. Pastikan Anda sudah login.
+      </div>
+    )
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -217,6 +244,9 @@ export default function DaftarEkstrakurikulerListPage() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredExtracurriculars.map((ekskul) => {
             const registerStatus = canRegister(ekskul)
+            const isFull = ekskul.JumlahAnggota >= ekskul.maxAnggota;
+            const isRegistered = myExtracurriculars.some(myEkskul => myEkskul.ekstra.id === ekskul.id);
+
             return (
               <Card key={ekskul.id} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="pb-3">
@@ -226,10 +256,12 @@ export default function DaftarEkstrakurikulerListPage() {
                     </div>
                     <Badge
                       className={`text-xs ${
-                        ekskul.registrationOpen ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                        registerStatus.can && !isFull && !isRegistered
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {ekskul.registrationOpen ? "Buka" : "Tutup"}
+                      {isRegistered ? "Terdaftar" : (registerStatus.can && !isFull ? "Buka" : "Tutup")}
                     </Badge>
                   </div>
                   <CardDescription className="text-sm">{ekskul.description}</CardDescription>
@@ -239,11 +271,14 @@ export default function DaftarEkstrakurikulerListPage() {
                   <div className="space-y-3 text-sm">
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-gray-500" />
-                      <span>{ekskul.schedule}</span>
+                      <span>
+                        {ekskul.jadwal.hari}, {ekskul.jadwal.waktuMulai}-{ekskul.jadwal.waktuSelesai}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <User className="w-4 h-4 text-gray-500" />
-                      <span>{ekskul.supervisor}</span>
+                      {/* **Perbaikan: Menampilkan nama dari ekskul.pembina.name** */}
+                      <span>{ekskul.pembina?.name || 'N/A'}</span> 
                     </div>
                     <div className="flex items-center space-x-2">
                       <Users className="w-4 h-4 text-gray-500" />
@@ -251,13 +286,13 @@ export default function DaftarEkstrakurikulerListPage() {
                         <div className="flex items-center justify-between mb-1">
                           <span>Anggota</span>
                           <span className="font-medium">
-                            {ekskul.currentMembers}/{ekskul.maxMembers}
+                            {ekskul.JumlahAnggota}/{ekskul.maxAnggota}
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${(ekskul.currentMembers / ekskul.maxMembers) * 100}%` }}
+                            style={{ width: `${(ekskul.JumlahAnggota / ekskul.maxAnggota) * 100}%` }}
                           />
                         </div>
                       </div>
@@ -266,9 +301,9 @@ export default function DaftarEkstrakurikulerListPage() {
 
                   {/* Action Button */}
                   <div className="pt-2">
-                    {registerStatus.can ? (
+                    {registerStatus.can && !isRegistered ? (
                       <Link
-                        href={`/dashboard/siswa/daftar-ekstrakurikuler?id=${ekskul.id}&name=${encodeURIComponent(ekskul.name)}`}
+                        href={`/dashboard/siswa/daftar-ekstrakurikuler/${ekskul.id}/${userId}`}
                       >
                         <Button className="w-full bg-blue-700 hover:bg-blue-800">
                           <Plus className="w-4 h-4 mr-2" />
@@ -277,16 +312,22 @@ export default function DaftarEkstrakurikulerListPage() {
                       </Link>
                     ) : (
                       <Button className="w-full" disabled>
-                        Tidak Tersedia
+                        {isRegistered ? "Sudah Terdaftar" : "Tidak Tersedia"}
                       </Button>
                     )}
                   </div>
 
                   {/* Error Message */}
-                  {!registerStatus.can && (
+                  {!registerStatus.can && !isRegistered && (
                     <div className="rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">
                       <AlertCircle className="mr-1 inline h-4 w-4" />
                       {registerStatus.reason}
+                    </div>
+                  )}
+                  {isRegistered && (
+                    <div className="rounded border border-blue-200 bg-blue-50 p-2 text-sm text-blue-700">
+                      <AlertCircle className="mr-1 inline h-4 w-4" />
+                      Anda sudah terdaftar di ekstrakurikuler ini.
                     </div>
                   )}
                 </CardContent>
