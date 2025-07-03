@@ -1,99 +1,94 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation" // Import useRouter from next/navigation
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { BookOpen, Clock, Trophy, AlertCircle, Plus, LogOut } from "lucide-react"
-import Link from "next/link"
-import { fetchWithToken } from "@/lib/fetcher"
-import { jwtDecode } from "jwt-decode"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { BookOpen, Clock, Trophy, AlertCircle, Plus, LogOut } from "lucide-react";
+import Link from "next/link";
+import { fetchWithToken } from "@/lib/fetcher";
+import { jwtDecode } from "jwt-decode";
 
 type TokenPayload = {
-  sub: string // userId
-  email: string
-  role: string
-  iat: number
-  exp: number
-}
+  sub: string;
+  email: string;
+  role: string;
+  iat: number;
+  exp: number;
+};
 
 /* ----------------------- */
-/* 1.  Wrapper Component   */
+/* 1. Wrapper Component */
 /* ----------------------- */
 export default function StudentDashboard() {
-  const [queryClient] = useState(() => new QueryClient())
+  const [queryClient] = useState(() => new QueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>
       <StudentDashboardContent />
     </QueryClientProvider>
-  )
+  );
 }
 
 /* ----------------------- */
-/* 2.  Page UI Content     */
+/* 2. Page UI Content */
 /* ----------------------- */
 function StudentDashboardContent() {
-  const router = useRouter()
-  const [userId, setUserId] = useState<number | null>(null)
+  const router = useRouter();
+  const [userId, setUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    // Ambil token dari localStorage
-    const token = localStorage.getItem("token")
+    const token = localStorage.getItem("token");
 
-    // Jika tidak ada token, arahkan ke halaman login
     if (!token) {
-      console.warn("Tidak ada token ditemukan. Mengarahkan ke halaman login.")
-      router.push("/login")
-      return
+      console.warn("Tidak ada token ditemukan. Mengarahkan ke halaman login.");
+      router.push("/login");
+      return;
     }
 
     try {
-      // Decode token untuk mendapatkan payload
-      const decoded: TokenPayload = jwtDecode(token)
+      const decoded: TokenPayload = jwtDecode(token);
 
-      // **Validasi role pengguna**
-      // Pastikan role-nya adalah 'siswa'
       if (decoded.role !== "siswa") {
-        console.warn(`Akses ditolak: Anda login sebagai ${decoded.role}, bukan siswa.`)
-        // Arahkan ke halaman login atau halaman dashboard yang sesuai dengan role
-        router.push("/login?error=unauthorized_role")
-        return
+        console.warn(`Akses ditolak: Anda login sebagai ${decoded.role}, bukan siswa.`);
+        router.push("/login?error=unauthorized_role");
+        return;
       }
 
-      // Set userId dari 'sub' di payload, pastikan diubah ke number
-      setUserId(Number(decoded.sub))
+      setUserId(Number(decoded.sub));
     } catch (error) {
-      console.error("Gagal mendekode token JWT atau token tidak valid:", error)
-      // Hapus token yang rusak dan arahkan ke login
-      localStorage.removeItem("token")
-      router.push("/login?error=invalid_token")
+      console.error("Gagal mendekode token JWT atau token tidak valid:", error);
+      localStorage.removeItem("token");
+      router.push("/login?error=invalid_token");
     }
-  }, [router]) // Dependensi `router` untuk memastikan `useEffect` berjalan jika ada perubahan pada objek router
+  }, [router]);
 
-  // Gunakan `userId` yang didapat dari token untuk query
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard", userId],
     queryFn: () =>
-      fetchWithToken(`${process.env.NEXT_PUBLIC_API_URL}/siswa/dashboard?userId=${userId}`),
-    // Query hanya akan dieksekusi jika userId sudah ada
+      fetchWithToken(
+        `${process.env.NEXT_PUBLIC_API_URL}/siswa/dashboard?userId=${userId}`
+      ),
     enabled: !!userId,
-  })
+  });
 
-  if (isLoading || userId === null) return <div className="p-8">Memuat...</div>
-  if (error) return <div className="p-8 text-red-600">Error: {(error as Error).message}</div>
+  if (isLoading || userId === null) return <div className="p-8">Memuat...</div>;
+  if (error) return <div className="p-8 text-red-600">Error: {(error as Error).message}</div>;
 
-  const { user, allExtracurriculars, myExtracurriculars } = data
+  const { user, allExtracurriculars, myExtracurriculars } = data;
 
   const canRegister = (ekskul: any) => {
-    if (+ekskul.JumlahAnggota >= ekskul.maxAnggota) return { can: false, reason: "Kuota penuh" }
-    if (myExtracurriculars.length >= 2) return { can: false, reason: "Maksimal 2 ekstrakurikuler" }
-    const taken = myExtracurriculars.map((e: any) => e.ekstra.jadwal.hari)
-    if (taken.includes(ekskul.jadwal.hari)) return { can: false, reason: "Jadwal bentrok" }
-    return { can: true, reason: "" }
-  }
+    if (+ekskul.JumlahAnggota >= ekskul.maxAnggota)
+      return { can: false, reason: "Kuota penuh" };
+    if (myExtracurriculars.length >= 2)
+      return { can: false, reason: "Maksimal 2 ekstrakurikuler" };
+    const taken = myExtracurriculars.map((e: any) => e.ekstra.jadwal.hari);
+    if (taken.includes(ekskul.jadwal.hari))
+      return { can: false, reason: "Jadwal bentrok" };
+    return { can: true, reason: "" };
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -137,7 +132,9 @@ function StudentDashboardContent() {
               <div>
                 <h2 className="text-2xl font-bold">{user.name}</h2>
                 <p className="opacity-90">NIS: {user.nomorInduk}</p>
-                <p className="opacity-90">Ekstrakurikuler: {myExtracurriculars.length}/2</p>
+                <p className="opacity-90">
+                  Ekstrakurikuler: {myExtracurriculars.length}/2
+                </p>
               </div>
             </div>
           </CardContent>
@@ -192,7 +189,10 @@ function StudentDashboardContent() {
                   </div>
                 ) : (
                   myExtracurriculars.map((item: any) => (
-                    <div key={item.id} className="rounded-lg border bg-gradient-to-r from-blue-50 to-blue-100 p-4">
+                    <div
+                      key={item.id}
+                      className="rounded-lg border bg-gradient-to-r from-blue-50 to-blue-100 p-4"
+                    >
                       <div className="mb-3 flex items-center justify-between">
                         <h3 className="text-lg font-semibold">{item.ekstra.name}</h3>
                       </div>
@@ -230,9 +230,12 @@ function StudentDashboardContent() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {allExtracurriculars.slice(0, 3).map((ekskul: any) => {
-                  const registerStatus = canRegister(ekskul)
+                  const registerStatus = canRegister(ekskul);
                   return (
-                    <div key={ekskul.id} className="rounded-lg border p-4 transition-shadow hover:shadow-md">
+                    <div
+                      key={ekskul.id}
+                      className="rounded-lg border p-4 transition-shadow hover:shadow-md"
+                    >
                       <div className="mb-3 flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
@@ -242,7 +245,7 @@ function StudentDashboardContent() {
                         </div>
                         {registerStatus.can ? (
                           <Link
-                            href={`/dashboard/siswa/daftar-ekstrakurikuler?id=${ekskul.id}&name=${encodeURIComponent(ekskul.name)}`}
+                            href={`/dashboard/siswa/daftar-ekstrakurikuler/${ekskul.id}/${userId}`}
                           >
                             <Button size="sm" className="bg-blue-700 hover:bg-blue-800">
                               Daftar
@@ -273,7 +276,7 @@ function StudentDashboardContent() {
                         </div>
                       )}
                     </div>
-                  )
+                  );
                 })}
                 <div className="text-center pt-4">
                   <Link href="/dashboard/siswa/daftar-ekstrakurikuler-list">
@@ -305,5 +308,5 @@ function StudentDashboardContent() {
         </div>
       </div>
     </div>
-  )
+  );
 }
