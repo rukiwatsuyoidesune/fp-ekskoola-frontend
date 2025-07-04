@@ -27,7 +27,7 @@ interface ExtracurricularData {
   registrationStart: string
   registrationEnd: string
   pembinaId?: string
-  schedules: Schedule[]
+  schedule: Schedule
 }
 
 export default function EditExtracurricularPage() {
@@ -35,6 +35,7 @@ export default function EditExtracurricularPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+
   const [formData, setFormData] = useState<ExtracurricularData>({
     id: "",
     name: "",
@@ -42,10 +43,8 @@ export default function EditExtracurricularPage() {
     maxMembers: "",
     registrationStart: "",
     registrationEnd: "",
-    schedules: [{ id: "1", day: "", startTime: "", endTime: "" }],
+    schedule: { id: "1", day: "", startTime: "", endTime: "" },
   })
-
-  const [schedules, setSchedules] = useState<Schedule[]>([{ id: "1", day: "", startTime: "", endTime: "" }])
 
   const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 
@@ -54,32 +53,25 @@ export default function EditExtracurricularPage() {
       setIsLoading(true)
       const token = localStorage.getItem("token")
       const ekstrakurikulerId = params.id as string
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/editEkstra/${ekstrakurikulerId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${ekstrakurikulerId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
+
       const data = await response.json()
 
       if (response.ok) {
         setFormData({
           ...data,
           maxMembers: data.maxMembers.toString(),
-          schedules: data.schedules.map((s: any, index: number) => ({
-            id: (index + 1).toString(),
-            day: s.day,
-            startTime: s.startTime,
-            endTime: s.endTime,
-          })),
+          schedule: {
+            id: data.schedule.id.toString(),
+            day: data.schedule.day,
+            startTime: data.schedule.startTime,
+            endTime: data.schedule.endTime,
+          },
         })
-        setSchedules(
-          data.schedules.map((s: any, index: number) => ({
-            id: (index + 1).toString(),
-            day: s.day,
-            startTime: s.startTime,
-            endTime: s.endTime,
-          }))
-        )
       }
 
       setIsLoading(false)
@@ -88,59 +80,54 @@ export default function EditExtracurricularPage() {
     fetchData()
   }, [params.id])
 
-  const updateSchedule = (id: string, field: keyof Schedule, value: string) => {
-    setSchedules(schedules.map((schedule) =>
-      schedule.id === id ? { ...schedule, [field]: value } : schedule
-    ))
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSaving(true);
+    e.preventDefault()
+    setIsSaving(true)
 
-  try {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token")
 
-    const payload = {
-      name: formData.name,
-      description: formData.description,
-      maxMembers: parseInt(formData.maxMembers),
-      registrationStart: formData.registrationStart,
-      registrationEnd: formData.registrationEnd,
-      pembinaId: formData.pembinaId ? parseInt(formData.pembinaId) : null,
-      schedules: schedules.map((s) => ({
-        day: s.day,
-        startTime: s.startTime,
-        endTime: s.endTime,
-      })),
-    };
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        maxMembers: parseInt(formData.maxMembers),
+        registrationStart: formData.registrationStart,
+        registrationEnd: formData.registrationEnd,
+        pembinaId: formData.pembinaId ? parseInt(formData.pembinaId) : null,
+        schedules: [
+          {
+            day: formData.schedule.day,
+            startTime: formData.schedule.startTime,
+            endTime: formData.schedule.endTime,
+          },
+        ],
+      }
 
-    console.log("=== Payload ===", payload);
+      console.log("=== Payload ===", payload)
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/editEkstra/${params.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/editEkstra/${params.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
 
-    const resJson = await response.json();
-    console.log("=== RESPONSE ===", resJson);
+      const resJson = await response.json()
+      console.log("=== RESPONSE ===", resJson)
 
-    if (!response.ok) throw new Error(resJson.message || "Gagal menyimpan perubahan");
+      if (!response.ok) throw new Error(resJson.message || "Gagal menyimpan perubahan")
 
-    alert("Ekstrakurikuler berhasil diperbarui!");
-    router.push("/dashboard/pembina");
-  } catch (error) {
-    console.error(error);
-    alert("Gagal memperbarui ekstrakurikuler. Silakan coba lagi.");
-  } finally {
-    setIsSaving(false);
+      alert("Ekstrakurikuler berhasil diperbarui!")
+      router.push("/dashboard/pembina")
+    } catch (error) {
+      console.error(error)
+      alert("Gagal memperbarui ekstrakurikuler. Silakan coba lagi.")
+    } finally {
+      setIsSaving(false)
+    }
   }
-};
-
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
@@ -226,44 +213,51 @@ export default function EditExtracurricularPage() {
                 <CardDescription>Atur jadwal kegiatan ekstrakurikuler</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {schedules.map((schedule) => (
-                  <div key={schedule.id} className="p-4 border rounded-lg bg-gray-50">
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <div>
-                        <Label>Hari</Label>
-                        <Select
-                          value={schedule.day}
-                          onValueChange={(value) => updateSchedule(schedule.id, "day", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder={schedule.day || "Pilih hari"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {days.map((day) => (
-                              <SelectItem key={day} value={day}>{day}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Waktu Mulai</Label>
-                        <Input
-                          type="time"
-                          value={schedule.startTime}
-                          onChange={(e) => updateSchedule(schedule.id, "startTime", e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label>Waktu Selesai</Label>
-                        <Input
-                          type="time"
-                          value={schedule.endTime}
-                          onChange={(e) => updateSchedule(schedule.id, "endTime", e.target.value)}
-                        />
-                      </div>
+                <div className="p-4 border rounded-lg bg-gray-50">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <Label>Hari</Label>
+                      <Select
+                        value={formData.schedule.day}
+                        onValueChange={(value) => setFormData({
+                          ...formData,
+                          schedule: { ...formData.schedule, day: value }
+                        })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={formData.schedule.day || "Pilih hari"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {days.map((day) => (
+                            <SelectItem key={day} value={day}>{day}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Waktu Mulai</Label>
+                      <Input
+                        type="time"
+                        value={formData.schedule.startTime}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          schedule: { ...formData.schedule, startTime: e.target.value }
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Waktu Selesai</Label>
+                      <Input
+                        type="time"
+                        value={formData.schedule.endTime}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          schedule: { ...formData.schedule, endTime: e.target.value }
+                        })}
+                      />
                     </div>
                   </div>
-                ))}
+                </div>
               </CardContent>
             </Card>
 

@@ -90,6 +90,11 @@ function StudentDashboardContent() {
     return { can: true, reason: "" };
   };
 
+  const isActivePeriod = (ekskul: any) => {
+    const today = new Date().toISOString().split("T")[0];
+    return ekskul.periode_start <= today && today <= ekskul.periode_end;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
@@ -231,6 +236,7 @@ function StudentDashboardContent() {
               <CardContent className="space-y-4">
                 {allExtracurriculars.slice(0, 3).map((ekskul: any) => {
                   const registerStatus = canRegister(ekskul);
+                  const active = isActivePeriod(ekskul);
                   return (
                     <div
                       key={ekskul.id}
@@ -243,7 +249,7 @@ function StudentDashboardContent() {
                           </div>
                           <p className="text-sm text-gray-600 mb-2">{ekskul.description}</p>
                         </div>
-                        {registerStatus.can ? (
+                        {active && registerStatus.can ? (
                           <Link
                             href={`/dashboard/siswa/daftar-ekstrakurikuler/${ekskul.id}/${userId}`}
                           >
@@ -253,11 +259,11 @@ function StudentDashboardContent() {
                           </Link>
                         ) : (
                           <Button size="sm" disabled>
-                            Tidak Tersedia
+                            {active ? "Tidak Tersedia" : "Periode Tutup"}
                           </Button>
                         )}
                       </div>
-                      <div className="grid gap-4 text-sm md:grid-cols-2">
+                      <div className="grid gap-4 text-sm md:grid-cols-3">
                         <div>
                           <p className="text-gray-600">Jadwal</p>
                           <p className="font-medium">{ekskul.jadwal.hari}</p>
@@ -268,8 +274,18 @@ function StudentDashboardContent() {
                             {ekskul.JumlahAnggota}/{ekskul.maxAnggota}
                           </span>
                         </div>
+                        <div>
+                          <p className="text-gray-600">Status</p>
+                          <span
+                            className={`font-medium text-xs ${
+                              active ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            {active ? "Aktif" : "Tidak Aktif"}
+                          </span>
+                        </div>
                       </div>
-                      {!registerStatus.can && (
+                      {!registerStatus.can && active && (
                         <div className="mt-3 rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">
                           <AlertCircle className="mr-1 inline h-4 w-4" />
                           {registerStatus.reason}

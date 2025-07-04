@@ -1,101 +1,112 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
-import { BookOpen, ClipboardList, Plus, LogOut, Trophy } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { jwtDecode } from "jwt-decode"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import {
+  BookOpen,
+  ClipboardList,
+  Plus,
+  LogOut,
+  Trophy,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
 
 type Extracurricular = {
-  id: number
-  name: string
-  JumlahAnggota: number
-  maxAnggota: number
+  id: number;
+  name: string;
+  JumlahAnggota: number;
+  maxAnggota: number;
+  periode_start: string; // Tambahkan ini
+  periode_end: string;   // Tambahkan ini
   jadwal?: {
-    hari: string
-    waktuMulai: string
-    waktuSelesai: string
-  } | null
-}
+    hari: string;
+    waktuMulai: string;
+    waktuSelesai: string;
+  } | null;
+};
 
 type SupervisorData = {
-  id: string
-  name: string
-  nomorInduk: string
-  role: string
-}
+  id: string;
+  name: string;
+  nomorInduk: string;
+  role: string;
+};
 
 type TokenPayload = {
-  sub: string
-  email: string
-  role: string
-  iat: number
-  exp: number
-}
+  sub: string;
+  email: string;
+  role: string;
+  iat: number;
+  exp: number;
+};
 
 export default function PembinaDashboard() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [supervisorData, setSupervisorData] = useState<SupervisorData | null>(null)
-  const [myExtracurriculars, setMyExtracurriculars] = useState<Extracurricular[]>([])
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [supervisorData, setSupervisorData] = useState<SupervisorData | null>(null);
+  const [myExtracurriculars, setMyExtracurriculars] = useState<Extracurricular[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
       if (!token) {
-        router.push("/login?role=pembina")
-        return
+        router.push("/login?role=pembina");
+        return;
       }
 
       try {
-        const decoded: TokenPayload = jwtDecode(token)
-
-        // Validasi role pembina
+        const decoded: TokenPayload = jwtDecode(token);
         if (decoded.role !== "pembina") {
-          console.warn("Akses ditolak: bukan pembina")
-          router.push("/login?role=pembina")
-          return
+          console.warn("Akses ditolak: bukan pembina");
+          router.push("/login?role=pembina");
+          return;
         }
 
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pembina/dashboard`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        })
+        });
 
-        if (!res.ok) throw new Error("Gagal fetch data dashboard")
+        if (!res.ok) throw new Error("Gagal fetch data dashboard");
 
-        const data = await res.json()
+        const data = await res.json();
         setSupervisorData({
           id: data.user.id,
           name: data.user.name,
           nomorInduk: data.user.nomorInduk,
           role: data.user.role,
-        })
-        setMyExtracurriculars(data.extracurriculars)
+        });
+        setMyExtracurriculars(data.extracurriculars);
       } catch (error) {
-        console.error("Gagal mengambil data dashboard:", error)
-        router.push("/login?role=pembina")
+        console.error("Gagal mengambil data dashboard:", error);
+        router.push("/login?role=pembina");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [router])
+    fetchData();
+  }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
-    router.push("/login?role=pembina")
-  }
+    localStorage.removeItem("token");
+    router.push("/login?role=pembina");
+  };
 
-  if (loading) return <div>Loading...</div>
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -136,7 +147,7 @@ export default function PembinaDashboard() {
               <div>
                 <h2 className="text-2xl font-bold">{supervisorData?.name}</h2>
                 <p className="opacity-90">
-                  NIP: {supervisorData?.nomorInduk} • {supervisorData?.role}
+                  NIP: {supervisorData?.nomorInduk}
                 </p>
                 <p className="opacity-90">
                   Mengelola: {myExtracurriculars.length} Ekstrakurikuler
@@ -187,48 +198,69 @@ export default function PembinaDashboard() {
                 <CardDescription>Ekstrakurikuler yang Anda kelola</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {myExtracurriculars.map((ekskul) => (
-                  <div key={ekskul.id} className="p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-blue-100">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-lg">{ekskul.name}</h3>
-                      <Badge className="bg-green-100 text-green-700">Aktif</Badge>
-                    </div>
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Anggota</p>
-                        <div className="flex items-center space-x-2">
-                          <Progress
-                            value={(ekskul.JumlahAnggota / ekskul.maxAnggota) * 100}
-                            className="flex-1"
-                          />
-                          <span className="text-sm font-medium">
-                            {ekskul.JumlahAnggota}/{ekskul.maxAnggota}
-                          </span>
+                {myExtracurriculars.map((ekskul) => {
+                  const now = new Date();
+                  const periodeEnd = new Date(ekskul.periode_end);
+                  const isActive = now <= periodeEnd;
+
+                  return (
+                    <div
+                      key={ekskul.id}
+                      className="p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-blue-100"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-lg">{ekskul.name}</h3>
+                        {isActive ? (
+                          <Badge className="bg-green-100 text-green-700">Aktif</Badge>
+                        ) : (
+                          <Badge className="bg-red-100 text-red-700">Tidak Aktif</Badge>
+                        )}
+                      </div>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Anggota</p>
+                          <div className="flex items-center space-x-2">
+                            <Progress
+                              value={(ekskul.JumlahAnggota / ekskul.maxAnggota) * 100}
+                              className="flex-1"
+                            />
+                            <span className="text-sm font-medium">
+                              {ekskul.JumlahAnggota}/{ekskul.maxAnggota}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Jadwal</p>
+                          <p className="font-medium text-sm">
+                            {ekskul.jadwal
+                              ? `${ekskul.jadwal.hari}, ${ekskul.jadwal.waktuMulai} - ${ekskul.jadwal.waktuSelesai}`
+                              : "Belum ada jadwal"}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Link href="/dashboard/pembina/presensi">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs bg-transparent"
+                            >
+                              Presensi
+                            </Button>
+                          </Link>
+                          <Link href={`/dashboard/pembina/edit-ekstrakurikuler/${ekskul.id}`}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs bg-transparent"
+                            >
+                              Kelola
+                            </Button>
+                          </Link>
                         </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Jadwal</p>
-                        <p className="font-medium text-sm">
-                          {ekskul.jadwal
-                            ? `${ekskul.jadwal.hari}, ${ekskul.jadwal.waktuMulai} - ${ekskul.jadwal.waktuSelesai}`
-                            : "Belum ada jadwal"}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Link href="/dashboard/pembina/presensi">
-                          <Button size="sm" variant="outline" className="text-xs bg-transparent">
-                            Presensi
-                          </Button>
-                        </Link>
-                        <Link href={`/dashboard/pembina/edit-ekstrakurikuler/${ekskul.id}`}>
-                          <Button size="sm" variant="outline" className="text-xs bg-transparent">
-                            Kelola
-                          </Button>
-                        </Link>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {myExtracurriculars.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -245,5 +277,5 @@ export default function PembinaDashboard() {
         </div>
       </div>
     </div>
-  )
+  );
 }
