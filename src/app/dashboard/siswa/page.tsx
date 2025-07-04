@@ -161,15 +161,6 @@ function StudentDashboardContent() {
                 <span>Daftar Ekstrakurikuler</span>
               </Button>
             </Link>
-            <Link href="/dashboard/siswa/riwayat-kehadiran">
-              <Button
-                variant="outline"
-                className="w-full h-16 border-blue-200 hover:bg-blue-50 flex flex-col items-center justify-center space-y-1 bg-transparent"
-              >
-                <Clock className="w-6 h-6 text-blue-700" />
-                <span>Riwayat Kehadiran</span>
-              </Button>
-            </Link>
           </CardContent>
         </Card>
 
@@ -305,22 +296,6 @@ function StudentDashboardContent() {
             </Card>
           </div>
 
-          {/* SIDEBAR */}
-          <div>
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle>Riwayat Kehadiran</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Link href="/dashboard/siswa/riwayat-kehadiran">
-                  <Button className="w-full bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900">
-                    <Clock className="mr-2 h-4 w-4" />
-                    Lihat Riwayat Kehadiran
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </div>

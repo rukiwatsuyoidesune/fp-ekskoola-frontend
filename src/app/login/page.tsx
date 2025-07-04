@@ -64,6 +64,7 @@ export default function LoginPage() {
       }
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user))
+        localStorage.setItem("userId", data.user.id.toString());
       }
 
       // redirect
