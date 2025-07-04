@@ -53,7 +53,7 @@ export default function EditExtracurricularPage() {
       setIsLoading(true)
       const token = localStorage.getItem("token")
       const ekstrakurikulerId = params.id as string
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${ekstrakurikulerId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/editEkstra/${ekstrakurikulerId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
